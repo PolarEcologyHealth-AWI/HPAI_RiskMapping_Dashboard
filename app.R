@@ -21,6 +21,7 @@ load("data/flegPhen.rda")
 load("data/flagPts.rda")
 load("data/flagDens.rda")
 load("data/sf_tracks.rda")
+load("data/HPAIoutbreak.rda")
 
 legendDistr <- dist %>% st_drop_geometry %>% filter(!duplicated(CODE)) %>%
   dplyr::select(CODE, COLOR)
@@ -46,158 +47,143 @@ ui <- fluidPage(
                
                #### Shorebird Movements ####
                {
-               tabPanel("Shorebird Movements",
+                 tabPanel("Shorebird Movements",
+                          
+                          div(class="outer",
+                              tags$head(includeCSS("styles.css")),
+                              
+                              leafletOutput("MovMap", width="100%", height="100%"),
+                              
+                              absolutePanel(id = "controls", class = "panel panel-default",
+                                            top = 80, left = 30, width = 300, fixed=TRUE,
+                                            draggable = FALSE, height = "auto",
+                                            
+                                            h4("Select species:"),
+                                            
+                                            selectInput(
+                                              inputId = "species",
+                                              label = "",
+                                              selected = "Red-necked Stint",
+                                              choices = c("All", meta$species),
+                                            ),
+                                            
+                                            hr(style = "border-top: 1px solid #74b9e1;"),
+                                            h4("Species Distribution:"),
+                                            
+                                            conditionalPanel(condition = "input.species.length > 0",
+                                                             fluidRow(
+                                                               column(6, materialSwitch("birdlife", "Show", status = "info", value = TRUE, right = TRUE))
+                                                             ),
+                                                             conditionalPanel(condition = "input.birdlife",
+                                                                              plotOutput("BirdLife_Legend", width = 220, height = 90)
+                                                             )
+                                            ),
+                                            
+                                            hr(style = "border-top: 1px solid #74b9e1;"),
+                                            h4("Leg-flag resightings:"),
+                                            
+                                            conditionalPanel(condition = "input.species.length > 0",
+                                                             fluidRow(
+                                                               column(6, materialSwitch(
+                                                                 inputId = "flags",
+                                                                 label = "Show", 
+                                                                 status = "info",
+                                                                 right = TRUE
+                                                               )),
+                                                               conditionalPanel(condition = "input.flags",
+                                                                                column(6, materialSwitch(
+                                                                                  inputId = "flagDens",
+                                                                                  label = "Density",
+                                                                                  status = "info",
+                                                                                  right = TRUE
+                                                                                ))
+                                                               )
+                                                             )
+                                            ),
+                                            
+                                            hr(style = "border-top: 1px solid #74b9e1;"),
+                                            
+                                            conditionalPanel(condition = paste0("['All', '", paste0(unique(sf_tracks$Species), collapse = "', '"), "'].indexOf(input.species) !== -1"),
+                                                             h4("Migration tracks:"),
+                                                             fluidRow(
+                                                               column(5,
+                                                                      materialSwitch(
+                                                                        inputId = "tracksNW",
+                                                                        label = "Northward", 
+                                                                        status = "info",
+                                                                        right = FALSE
+                                                                      )),
+                                                               column(5,
+                                                                      materialSwitch(
+                                                                        inputId = "tracksSW",
+                                                                        label = "Southward", 
+                                                                        status = "warning",
+                                                                        right = FALSE
+                                                                      ))
+                                                             ),
+                                                             
+                                                             # conditionalPanel(condition = "input.tracksNW",
+                                                             #   fluidRow(
+                                                             #     column(12, sliderTextInput(
+                                                             #       inputId = "tracks_day",
+                                                             #       label = "Date slider (not working):",
+                                                             #       choices = format(seq(as.POSIXct("2012-01-01"), as.POSIXct("2012-12-31"), by = "day"), "%d-%b"),
+                                                             #       selected = "01-Dec",
+                                                             #       animate = animationOptions(interval = 200, loop = T)
+                                                             #     ))
+                                                             #   )
+                                                             # )
+                                            )
+                                            
+                              ),
+                              
+                              conditionalPanel(condition = "input.flags==true",
+                                               absolutePanel(id = "leg-flag", class = "panel panel-default", 
+                                                             bottom = 200, right = 20, fixed=TRUE, 
+                                                             draggable = TRUE,
+                                                             height = 450, width = 360,
+                                                             h3("Leg-flag resightings"),
+                                                             h2(""),
+                                                             echarts4rOutput("chart", width = "100%", height = "60%"),
+                                                             h5("Select month with click on bar-chart"),
+                                                             actionButton("reset", "Clear")
+                                               )
+                              ),
+                              
+                              absolutePanel(id = "logo", class = "card", bottom = 40, right = 20, fixed=TRUE, draggable = FALSE, height = "auto", width = "auto",
+                                            tags$a(href='https://wildlifehealthaustralia.com.au/', tags$img(src='logos_small_horizontal.png', height = 75)))
+                          )
+                 )
+               },
+               
+               #### HPAIV Outbreaks #####
+               {
+               tabPanel("HPAI Outbreaks",
                         
                         div(class="outer",
                             tags$head(includeCSS("styles.css")),
                             
-                            leafletOutput("MovMap", width="100%", height="100%"),
+                            leafletOutput("OutbreakMap", width="100%", height="100%"),
                             
                             absolutePanel(id = "controls", class = "panel panel-default",
                                           top = 80, left = 30, width = 300, fixed=TRUE,
                                           draggable = FALSE, height = "auto",
                                           
-                                          h4("Select species:"),
+                                          br(),
                                           
-                                          selectInput(
-                                            inputId = "species",
-                                            label = "",
-                                            selected = "Red-necked Stint",
-                                            choices = c("All", meta$species),
-                                          ),
-                                          
-                                          hr(style = "border-top: 1px solid #74b9e1;"),
-                                          h4(bsButton("birdlife_info", label = "", 
-                                                      icon = icon("info", lib = "font-awesome"), 
-                                                      style = "default", size = "extra-small"), "Species Distribution:"),
-                                          
-                                          conditionalPanel(condition = "input.species.length > 0",
-                                            fluidRow(
-                                              column(5, switchInput("birdlife", "Show", value = TRUE))
-                                            ),
-                                            conditionalPanel(condition = "input.birdlife",
-                                              plotOutput("BirdLife_Legend", width = 220, height = 90)
-                                            )
-                                          ),
-                                          
-                                          bsPopover(
-                                            id = "birdlife_info",
-                                            title = "BirdLife Distribution Maps",
-                                            content = HTML(paste0(
-                                              "To be completed."
-                                            )),
-                                            placement = "right",
-                                            trigger = "hover",
-                                            options = list(container = "body")
-                                          ),
-                                          
-                                          hr(style = "border-top: 1px solid #74b9e1;"),
-                                          h4(bsButton("flag_info", label = "", 
-                                                      icon = icon("info", lib = "font-awesome"), 
-                                                      style = "default", size = "extra-small"), "Leg-flag resightings:"),
-                                          
-                                          conditionalPanel(condition = "input.species.length > 0",
-                                                           fluidRow(
-                                                             column(5, switchInput("flags", "Show", value = TRUE)),
-                                                             conditionalPanel(condition = "input.flags",
-                                                              column(5, switchInput("flagDens", "Densities", value = FALSE))
-                                                             )
-                                                           ),
-                                                conditionalPanel(condition = "input.flags & !input.flagDens",
-                                                    fluidRow(column(12, 
-                                                         sliderTextInput(
-                                                                inputId = "flagScaling",
-                                                                label = "Point scaling:", 
-                                                                choices = seq(0, 100, by = 2.5),
-                                                                selected = c(2.5, 20))
-                                                           ))
-                                                )
-                                          ),
-                                          
-                                          bsPopover(
-                                            id = "flag_info",
-                                            title = "Lag-fleg resightings",
-                                            content = HTML(
-                                              "Explain the nature of lef-flegs etc."
-                                            ),
-                                            placement = "right",
-                                            trigger = "hover",
-                                            options = list(container = "body")
-                                          ),
-                                          
-                                          hr(style = "border-top: 1px solid #74b9e1;"),
-        
-                                          conditionalPanel(condition = paste0("['All', '", paste0(unique(sf_tracks$Species), collapse = "', '"), "'].indexOf(input.species) !== -1"),
-                                                           h4(bsButton("track_info", label = "", 
-                                                                       icon = icon("info", lib = "font-awesome"), 
-                                                                       style = "default", size = "extra-small"), "Migration tracks:"),
-                                                           fluidRow(
-                                                             column(5,
-                                                                    materialSwitch(
-                                                                      inputId = "tracksNW",
-                                                                      label = "Northward", 
-                                                                      status = "info",
-                                                                      right = TRUE
-                                                                    )),
-                                                             column(5,
-                                                                    materialSwitch(
-                                                                      inputId = "tracksSW",
-                                                                      label = "Southward", 
-                                                                      status = "warning",
-                                                                      right = TRUE
-                                                                    ))
-                                                           ),
-                                                           
-                                                           # conditionalPanel(condition = "input.tracksNW",
-                                                           #   fluidRow(
-                                                           #     column(12, sliderTextInput(
-                                                           #       inputId = "tracks_day",
-                                                           #       label = "Date slider (not working):",
-                                                           #       choices = format(seq(as.POSIXct("2012-01-01"), as.POSIXct("2012-12-31"), by = "day"), "%d-%b"),
-                                                           #       selected = "01-Dec",
-                                                           #       animate = animationOptions(interval = 200, loop = T)
-                                                           #     ))
-                                                           #   )
-                                                           # )
-                                          ),
-                                          
-                                          bsPopover(
-                                            id = "track_info",
-                                            title = "Migration tracks",
-                                            content = HTML(
-                                              "Individual tracks based on light-level geoloction (see page info for details). Points refer to stopover sites with size relative to the time spent on the location."
-                                            ),
-                                            placement = "right",
-                                            trigger = "hover",
-                                            options = list(container = "body")
+                                          fluidRow(
+                                            column(12, sliderTextInput("hpai_month", label = "", 
+                                                                       grid = TRUE, force_edges = FALSE, hide_min_max = TRUE,
+                                                                       choices = as.character(seq(2005, 2024, by = 1)),
+                                                                       selected = 2015, animate = T)),
+                                            column(6,  materialSwitch("byYear", label = "by Year", value = TRUE))
                                           )
                                           
-                            ),
-                            
-                            conditionalPanel(condition = "input.flags==true",
-                                             absolutePanel(id = "leg-flag", class = "panel panel-default", 
-                                                           bottom = 200, right = 20, fixed=TRUE, 
-                                                           draggable = TRUE,
-                                                           height = 450, width = 360,
-                                                           h3("Leg-flag resightings"),
-                                                           h2(""),
-                                                           echarts4rOutput("chart", width = "100%", height = "60%"),
-                                                           h5("Select month with click on bar-chart"),
-                                                           actionButton("reset", "Clear")
-                                                           )
-                            ),
-                            
-                            absolutePanel(id = "logo", class = "card", bottom = 40, right = 20, fixed=TRUE, draggable = FALSE, height = "auto", width = "auto",
-                                          tags$a(href='https://wildlifehealthaustralia.com.au/', tags$img(src='logos_small_horizontal.png', height = 75)))
-                            )
+                                          )
                         )
+                            
+               )
                },
-               
-               #### HPAIV Outbreaks #####
-               tabPanel("HPAI Outbreaks",
-                        div(class = "outer",
-                        )
-               ),
                
                tabPanel("Bird Aggregations",
                         div(class = "outer",
@@ -245,8 +231,6 @@ server <- function(input, output) {
 
     as_ggplot(get_legend(pl))
   })
-  
-  
   
   
   ### Leg-flags ####
@@ -347,7 +331,6 @@ server <- function(input, output) {
        event = "click"
       )
   })
-  
   
   ### Tracks ####
   observeEvent(input$tracksNW, {
@@ -488,6 +471,46 @@ server <- function(input, output) {
     }
   })
   
+  
+  
+  
+  ###################
+  #### Outbreaks ####
+  ###################
+  
+  ### Distribution ####
+  outbreakData <- reactive({
+    if(input$byYear) {
+      Is %>% filter(format(Date, "%Y") == input$hpai_month) %>%
+        st_as_sf(coords = c("Longitude", "Latitude"), crs = 4326) %>% st_shift_longitude()
+    } else {
+      Is %>% filter(as.numeric(format(Date, "%Y")) <= as.numeric(input$hpai_month))%>%
+        st_as_sf(coords = c("Longitude", "Latitude"), crs = 4326) %>% st_shift_longitude()
+    }
+  })
+  
+  
+  
+  ### Maps ####
+  output$OutbreakMap <- renderLeaflet(
+    leaflet(options = leafletOptions(zoomControl = FALSE)) %>% 
+      setView(lng = 170, lat = 30, zoom = 3) %>%
+      addProviderTiles(providers$Esri.WorldShadedRelief, group = "map") %>%
+      addProviderTiles(providers$CartoDB.VoyagerOnlyLabels, group = "label") %>%
+      onRender(
+        "function(el, x) {
+          L.control.zoom({
+            position:'topright'
+          }).addTo(this);
+        }")
+  )
+  
+  observe({
+    leafletProxy("OutbreakMap", data = outbreakData()) %>%
+      clearShapes() %>%
+      clearControls() %>%
+      addCircles(color = ifelse(outbreakData()$is_wild, "slateblue", "chocolate"), fillOpacity = 0.6, weight = 6)
+  })
 }
 
 
