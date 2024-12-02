@@ -8,11 +8,15 @@ require(htmlwidgets)
 library(echarts4r)
 library(bslib)
 require(leaflet)
+library(leafem)
 library(tidyverse)
+library(paletteer)
+library(ggthemes)
 library(shinyBS)
 library(ggpubr)
 library(sf)
 sf_use_s2(FALSE)
+library(stars)
 
 load("data/metadata.rda")
 load("data/distributions_small.rda")
@@ -22,6 +26,11 @@ load("data/flagPts.rda")
 load("data/flagDens.rda")
 load("data/sf_tracks.rda")
 load("data/HPAIoutbreak.rda")
+load("data/starsAggr.rda")
+load("data/sba.rdata")
+
+outbreakSM <- outbreakDat %>% st_drop_geometry() %>%
+  group_by(Year, is_wild) %>% summarise(sample = sum(sample))
 
 legendDistr <- dist %>% st_drop_geometry %>% filter(!duplicated(CODE)) %>%
   dplyr::select(CODE, COLOR)
@@ -72,10 +81,11 @@ ui <- fluidPage(
                                             
                                             conditionalPanel(condition = "input.species.length > 0",
                                                              fluidRow(
-                                                               column(6, materialSwitch("birdlife", "Show", status = "info", value = TRUE, right = TRUE))
+                                                               column(6, materialSwitch("birdlife", "Show", status = "info", value = FALSE))
                                                              ),
-                                                             conditionalPanel(condition = "input.birdlife",
-                                                                              plotOutput("BirdLife_Legend", width = 220, height = 90)
+                                                             conditionalPanel(
+                                                               condition = "input.birdlife",
+                                                               plotOutput("BirdLife_Legend", width = 220, height = 90)
                                                              )
                                             ),
                                             
@@ -88,7 +98,7 @@ ui <- fluidPage(
                                                                  inputId = "flags",
                                                                  label = "Show", 
                                                                  status = "info",
-                                                                 right = TRUE
+                                                                 right = FALSE
                                                                )),
                                                                conditionalPanel(condition = "input.flags",
                                                                                 column(6, materialSwitch(
@@ -150,8 +160,8 @@ ui <- fluidPage(
                                                )
                               ),
                               
-                              absolutePanel(id = "logo", class = "card", bottom = 40, right = 20, fixed=TRUE, draggable = FALSE, height = "auto", width = "auto",
-                                            tags$a(href='https://wildlifehealthaustralia.com.au/', tags$img(src='logos_small_horizontal.png', height = 75)))
+                              # absolutePanel(id = "logo", class = "card", bottom = 40, right = 20, fixed=TRUE, draggable = FALSE, height = "auto", width = "auto",
+                              #               tags$a(href='https://wildlifehealthaustralia.com.au/', tags$img(src='logos_small_horizontal.png', height = 75)))
                           )
                  )
                },
@@ -169,14 +179,24 @@ ui <- fluidPage(
                                           top = 80, left = 30, width = 300, fixed=TRUE,
                                           draggable = FALSE, height = "auto",
                                           
+                                          h4("HPAI Outbreaks:"),
                                           br(),
+                                          
+                                          fluidRow(
+                                            column(6, materialSwitch("outbreaks", "Show", status = "info", value = FALSE))),
                                           
                                           fluidRow(
                                             column(12, sliderTextInput("hpai_month", label = "", 
                                                                        grid = TRUE, force_edges = FALSE, hide_min_max = TRUE,
                                                                        choices = as.character(seq(2005, 2024, by = 1)),
-                                                                       selected = 2015, animate = T)),
-                                            column(6,  materialSwitch("byYear", label = "by Year", value = TRUE))
+                                                                       selected = 2015, animate = T))
+                                          ),
+                                          
+                                          conditionalPanel(
+                                            condition = "input.outbreaks",
+                                            plotOutput("Outbreak_Legend", width = 160, height = 80),
+                                            br(),
+                                            plotOutput("outbreakGraph", width = 275, height = 220)
                                           )
                                           
                                           )
@@ -185,10 +205,16 @@ ui <- fluidPage(
                )
                },
                
+               #### Aggregations #####
+               {
                tabPanel("Bird Aggregations",
-                        div(class = "outer",
+                        div(class="outer",
+                            tags$head(includeCSS("styles.css")),
+                            
+                         leafletOutput("AggrMap", width="100%", height="100%") 
                         )
-               ),
+                    )
+               },
                
                tabPanel("Species at Risk",
                         div(class = "outer",
@@ -206,7 +232,8 @@ server <- function(input, output) {
   #### Movement #####
   ###################
   
-  ### Distribution ####
+  ### Distribution
+  {
   speciesDistr <- reactive({
     if(!input$birdlife) {
         out <- dist[1,] %>% mutate(COLOR = "#ffffff")
@@ -231,9 +258,10 @@ server <- function(input, output) {
 
     as_ggplot(get_legend(pl))
   })
+  }
   
-  
-  ### Leg-flags ####
+  ### Leg-flags
+  {
   res = reactiveVal(0)
   
   observeEvent(input$reset,{
@@ -300,7 +328,7 @@ server <- function(input, output) {
     data <- flegPhenData() |>
       mutate(month = as.character(month(ymd(010101) + months(Month-1),label=TRUE,abbr=TRUE)),
              cond  = ifelse(month%in%selectMonth(), 2, 1),
-             colAU = c("#585858", "#e7c926")[cond],
+             colAU = c("#585858", "#2e37fc")[cond],
              colFL = c("#c6c6c6", "#3390de")[cond])
     
     colAU <- paste0("function(params) {var colorList = [",
@@ -316,7 +344,7 @@ server <- function(input, output) {
       e_bar(Australia, stack = "grp", itemStyle = list(color = htmlwidgets::JS(colAU))) |>
       e_bar(Flyway,    stack = "grp", itemStyle = list(color = htmlwidgets::JS(colFL))) |>
       e_color(
-        c("#e7c926", "#3390de")
+        c("#2e37fc", "#3390de")
       ) |>
       e_grid(left = "15%", bottom = "10%") |>
       e_on(
@@ -331,8 +359,10 @@ server <- function(input, output) {
        event = "click"
       )
   })
+  }
   
-  ### Tracks ####
+  ### Tracks 
+  {
   observeEvent(input$tracksNW, {
     if(input$tracksNW & input$flags) {
       updateSwitchInput(
@@ -394,7 +424,10 @@ server <- function(input, output) {
     # }
   })
   
-  ### Maps ####
+  }
+  
+  ### Maps
+  {
   output$MovMap <- renderLeaflet(
       leaflet(options = leafletOptions(zoomControl = FALSE)) %>% 
       setView(lng = 170, lat = 30, zoom = 3) %>%
@@ -425,11 +458,12 @@ server <- function(input, output) {
       if(!input$flagDens) {
       proxy <- proxy %>%
         addCircles(data = speciesFlags(),
+                   group = 'flags',
                    color = ~Color,
                    opacity = 0.75,
                    weight = approx(range(speciesFlags()$Sample),
-                                   as.numeric(input$flagScaling), 
-                                   speciesFlags()$Sample)$y, group = 'flags')
+                                    c(5.5, 25),
+                                    speciesFlags()$Sample)$y)
       }
       if(input$flagDens) {
         proxy <- proxy %>%
@@ -470,28 +504,49 @@ server <- function(input, output) {
                    weight = ~Weight, group = 'flags')
     }
   })
-  
-  
+  }
   
   
   ###################
   #### Outbreaks ####
   ###################
   
-  ### Distribution ####
+  ### Points
+  {
   outbreakData <- reactive({
-    if(input$byYear) {
-      Is %>% filter(format(Date, "%Y") == input$hpai_month) %>%
-        st_as_sf(coords = c("Longitude", "Latitude"), crs = 4326) %>% st_shift_longitude()
-    } else {
-      Is %>% filter(as.numeric(format(Date, "%Y")) <= as.numeric(input$hpai_month))%>%
-        st_as_sf(coords = c("Longitude", "Latitude"), crs = 4326) %>% st_shift_longitude()
-    }
+      outbreakDat %>% 
+        bind_rows(outbreakDat %>% st_shift_longitude) %>% filter(Year == input$hpai_month) %>%
+        st_as_sf(coords = c("Longitude", "Latitude"), crs = 4326) 
   })
   
+  output$outbreakGraph <- renderPlot({
+    ggplot(outbreakSM %>% mutate(color = ifelse(Year==input$hpai_month, "black", "transparent")), 
+           aes(x = Year, y = sample, fill = is_wild, color = as.factor(color))) +
+      geom_bar(stat="identity", show.legend = FALSE) +
+      scale_fill_manual(values = c("chocolate", "slateblue")) +
+      scale_color_manual(values = c("black", "transparent")) +
+      xlab('') + ylab('# Reported cases') +
+      theme_light()
+  })
   
+  }
   
-  ### Maps ####
+  ### Maps 
+  {
+  output$Outbreak_Legend <- renderPlot({
+    pl <- ggplot(tibble(y = c(1,1), x = c(1,2), col = c("Domestic birds", "Wild birds")), aes(x = x, y = y, color = col)) +
+      geom_point(size = 10) +
+      scale_color_manual(values = c("chocolate", "slateblue")) +
+      theme(
+        legend.background = element_rect(fill = "white"),
+        legend.title = element_blank(),
+        legend.text = element_text(size = 15),
+        legend.key.size = unit(1.5, 'cm')
+      )
+    
+    as_ggplot(get_legend(pl))
+  })
+  
   output$OutbreakMap <- renderLeaflet(
     leaflet(options = leafletOptions(zoomControl = FALSE)) %>% 
       setView(lng = 170, lat = 30, zoom = 3) %>%
@@ -506,11 +561,74 @@ server <- function(input, output) {
   )
   
   observe({
+    if(input$outbreaks) {
     leafletProxy("OutbreakMap", data = outbreakData()) %>%
       clearShapes() %>%
       clearControls() %>%
       addCircles(color = ifelse(outbreakData()$is_wild, "slateblue", "chocolate"), fillOpacity = 0.6, weight = 6)
+    }
   })
+  }
+  
+  
+  ##########################
+  #### Bird aggregations ###
+  ##########################
+  
+  ### Maps  
+  {
+  cls  <- rev(paletteer_c("ggthemes::Red-Green Diverging", 6))
+  brks <- c(0, 100, 1000, 5000, 10000, 50000, 2000000) 
+  
+  output$AggrMap <- renderLeaflet(
+    leaflet(options = leafletOptions(zoomControl = FALSE)) %>% 
+      addProviderTiles(providers$Esri.WorldShadedRelief, group = "map") %>%
+      addProviderTiles(providers$CartoDB.VoyagerOnlyLabels, group = "label") %>%
+      addGeoRaster(
+        starsAggr[[3]],
+        opacity = 0.85,
+        colorOptions = colorOptions(
+          breaks = brks,
+          palette = cls,
+          na.color = "transparent"
+        ),
+        group = "MaxZoom"
+      ) %>%
+      addGeoRaster(
+        starsAggr[[2]],
+        opacity = 0.85,
+        colorOptions = colorOptions(
+          breaks = brks,
+          palette = cls,
+          na.color = "transparent"
+        ),
+        group = "MedZoom"
+      ) %>%
+      addGeoRaster(
+        starsAggr[[1]],
+        opacity = 0.85,
+        colorOptions = colorOptions(
+          breaks = brks,
+          palette = cls,
+          na.color = "transparent"
+        ),
+        group = "MinZoom"
+      ) %>%
+      # addPolygons(data = sba %>% st_transform(4326), 
+      #             color = "black", weight = 2, 
+      #             fill = FALSE, group = "MinZoom") %>%
+      groupOptions("MinZoom", zoomLevels = 7:20) %>%
+      groupOptions("MedZoom", zoomLevels = 5:6) %>%
+      groupOptions("MaxZoom", zoomLevels = 1:4) %>%
+      onRender(
+        "function(el, x) {
+          L.control.zoom({
+            position:'topright'
+          }).addTo(this);
+        }")
+  )
+  }
+  
 }
 
 

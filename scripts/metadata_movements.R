@@ -90,7 +90,7 @@ meta <- tibble(species =
 # 
 # dist <- rbind(dist01, dist02) %>% mutate(AREA = as.numeric(st_area(.))) %>% arrange(AREA) %>% st_intersection(flyway)
 # plot(dist)
-#
+# 
 # ### All
 # all <- dist %>% group_by(SEASONAL) %>% summarise(geometry = st_union(geometry), COLOR = unique(COLOR)) %>%
 #        suppressMessages()
@@ -99,8 +99,8 @@ meta <- tibble(species =
 # 
 # dist <- dist %>% bind_rows(tm)
 # 
-# save(dist, file = "data/distributions.rda")
-# load("data/distributions.rda")
+# # save(dist, file = "data/distributions.rda")
+# # load("data/distributions.rda")
 # 
 # dist <- dist %>% st_simplify(dTolerance = 0.05) %>% filter(CODE != "Seasonal occurance uncertain")
 # save(dist, file = "data/distributions_small.rda")
@@ -147,30 +147,31 @@ load("data/flagsDB.rda")
 
 
 #### Densities
+{
 # library(spatstat)
 # centre <- flyway %>% st_centroid() %>% st_coordinates()
 # prj    <- sprintf("+proj=laea +lon_0=%s +lat_0=%s", centre[1], centre[2])
 # 
 # spDens <- lapply(unique(flagsDB$SpeName), function(x) {
-#   
+# 
 #   sf_points  <- flagsDB %>% filter(SpeName==x) %>% st_geometry()
 #   # plot(sf_points)
 #   ppp_points <- as.ppp(sf_points %>% st_transform(prj))
 #   Window(ppp_points) <- as.owin(flyway %>% st_transform(prj))
 #   density_spatstat <- density(ppp_points, adjust = 0.25)
 #   # plot(density_spatstat)
-#   density_stars <- stars::st_as_stars(density_spatstat) %>% 
+#   density_stars <- stars::st_as_stars(density_spatstat) %>%
 #     st_set_crs(prj) %>% setNames("dens") %>%
 #     mutate(dens = scales::rescale(dens, c(0,1)))
-#   
+# 
 #   q <- quantile(density_stars[[1]], na.rm = T, probs = seq(0.5, 0.99, length = 5))
-#   
+# 
 #   st_contour(density_stars, na.rm = T,
 #                      breaks = q)[-1,] %>%
 #     mutate(species = x, quantile = seq(0.5, 0.99, length = 5)[1:nrow(.)], month = NA) %>%
 #     dplyr::select(species, month, quantile) %>% bind_rows(
 #       lapply(c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"), function(m) {
-#         sf_points  <- flagsDB %>% filter(SpeName==x) %>% 
+#         sf_points  <- flagsDB %>% filter(SpeName==x) %>%
 #           mutate(Month = c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")[Month]) %>%
 #           filter(Month == m) %>%
 #           st_geometry()
@@ -179,12 +180,12 @@ load("data/flagsDB.rda")
 #         Window(ppp_points) <- as.owin(flyway %>% st_transform(prj))
 #         density_spatstat <- density(ppp_points, adjust = 0.25)
 #         # plot(density_spatstat)
-#         density_stars <- stars::st_as_stars(density_spatstat) %>% 
+#         density_stars <- stars::st_as_stars(density_spatstat) %>%
 #           st_set_crs(prj) %>% setNames("dens") %>%
 #           mutate(dens = scales::rescale(dens, c(0,1)))
-#         
+# 
 #         q <- quantile(density_stars[[1]], na.rm = T, probs = seq(0.5, 0.99, length = 5))
-#         
+# 
 #         st_contour(density_stars, na.rm = T,
 #                    breaks = q)[-1,] %>%
 #           mutate(species = x, quantile = seq(0.5, 0.99, length = 5)[1:nrow(.)], month = m) %>%
@@ -192,12 +193,12 @@ load("data/flagsDB.rda")
 #         } else NULL
 #       }) %>% Reduce("rbind", .)
 #     )
-#   
-#   # ggplot() +
-#   #   # geom_sf(data = flyway %>% st_transform(prj)) +
-#   #   geom_sf(data = cont %>% st_transform(4326) %>% st_shift_longitude(), mapping = aes(geometry = geometry, fill = dens)) +
-#   #   scale_fill_manual(values = brewer.pal(5, "RdPu"))
-#   
+# 
+# ggplot() +
+#   # geom_sf(data = flyway %>% st_transform(prj)) +
+#   geom_sf(data = cont %>% st_transform(4326) %>% st_shift_longitude(), mapping = aes(geometry = geometry, fill = dens)) +
+#   scale_fill_manual(values = brewer.pal(5, "RdPu"))
+# 
 # }) %>% Reduce("rbind", .)
 # 
 # alDens <- lapply("All", function(x) {
@@ -206,18 +207,18 @@ load("data/flagsDB.rda")
 #   Window(ppp_points) <- as.owin(flyway %>% st_transform(prj))
 #   density_spatstat <- density(ppp_points, adjust = 0.25)
 #   # plot(density_spatstat)
-#   density_stars <- stars::st_as_stars(density_spatstat) %>% 
+#   density_stars <- stars::st_as_stars(density_spatstat) %>%
 #     st_set_crs(prj) %>% setNames("dens") %>%
 #     mutate(dens = scales::rescale(dens, c(0,1)))
-# 
+#
 #   q <- quantile(density_stars[[1]], na.rm = T, probs = seq(0.5, 0.99, length = 5))
-# 
+#
 #   st_contour(density_stars, na.rm = T,
 #              breaks = q)[-1,] %>%
 #     mutate(species = x, quantile = seq(0.5, 0.99, length = 5)[1:nrow(.)], month = NA) %>%
 #     dplyr::select(species, month, quantile) %>% bind_rows(
 #     lapply(c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"), function(m) {
-#       sf_points  <- flagsDB %>% 
+#       sf_points  <- flagsDB %>%
 #         mutate(Month = c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")[Month]) %>%
 #         filter(Month == m) %>%
 #         st_geometry()
@@ -226,35 +227,35 @@ load("data/flagsDB.rda")
 #         Window(ppp_points) <- as.owin(flyway %>% st_transform(prj))
 #         density_spatstat <- density(ppp_points, adjust = 0.25)
 #         # plot(density_spatstat)
-#         density_stars <- stars::st_as_stars(density_spatstat) %>% 
+#         density_stars <- stars::st_as_stars(density_spatstat) %>%
 #           st_set_crs(prj) %>% setNames("dens") %>%
 #           mutate(dens = scales::rescale(dens, c(0,1)))
-#         
+#
 #         q <- quantile(density_stars[[1]], na.rm = T, probs = seq(0.5, 0.99, length = 5))
-#         
+#
 #         st_contour(density_stars, na.rm = T,
 #                    breaks = q)[-1,] %>%
 #           mutate(species = x, quantile = seq(0.5, 0.99, length = 5)[1:nrow(.)], month = m) %>%
 #           dplyr::select(species, month, quantile)
 #       } else NULL
-#     }) %>% 
+#     }) %>%
 #       Reduce("rbind", .)
 #     )
 # }) %>% Reduce("rbind",.)
-# 
+#
 # flagDens <- bind_rows(alDens, spDens)
 # rownames(flagDens) <- 1:nrow(flagDens)
-# 
+#
 # ## Color
 # flagDens <- flagDens %>%
 #   left_join(tibble(quantile = seq(0.5, 0.99, length = 5), color = RColorBrewer::brewer.pal(5, "RdPu")), by = "quantile") %>%
 #   st_transform(4326) %>% st_shift_longitude()
-# 
-# 
-# 
+#
+#
+#
 # save(flagDens, file = "data/flagDens.rda")
-load("data/flagDens.rda")
-
+# load("data/flagDens.rda")
+# 
 # flagPts <- lapply(unique(flagsDB$SpeName), function(x) {
 #   flagsDB %>% filter(SpeName==x) %>%
 #     mutate(Month = as.character(month(ymd(010101) + months(Month-1),label=TRUE,abbr=TRUE))) %>%
@@ -293,11 +294,11 @@ load("data/flagDens.rda")
 #     )
 # )
 # 
-# flagPts <- flagPts %>% mutate(Color = c("#3390de", "#e7c926")[as.numeric(st_intersects(flagPts, oz, sparse = F)[,1])+1]) %>%
+# flagPts <- flagPts %>% mutate(Color = c("#3390de", "#2e37fc")[as.numeric(st_intersects(flagPts, oz, sparse = F)[,1])+1]) %>%
 #   dplyr::select(Species, Month, Grid, Sample, Color)
 # 
 # save(flagPts, file = "data/flagPts.rda")
-load("data/flagPts.rda")
+# load("data/flagPts.rda")
 
 # flegPhen <- lapply(unique(flagsDB$SpeName), function(x) {
 #   flagsDB %>% st_drop_geometry() %>% filter(SpeName == x) %>%
@@ -313,12 +314,8 @@ load("data/flagPts.rda")
 #   )
 # 
 # save(flegPhen, file = "data/flegPhen.rda")
-load("data/flegPhen.rda")
-
-
-
-
-
+# load("data/flegPhen.rda")
+}
 
 
 
