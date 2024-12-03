@@ -19,7 +19,6 @@ sf_use_s2(FALSE)
 library(stars)
 
 load("data/metadata.rda")
-load("data/distributions_small.rda")
 load("data/flyway.rda")
 load("data/flegPhen.rda")
 load("data/flagPts.rda")
@@ -211,7 +210,18 @@ ui <- fluidPage(
                         div(class="outer",
                             tags$head(includeCSS("styles.css")),
                             
-                         leafletOutput("AggrMap", width="100%", height="100%") 
+                         leafletOutput("AggrMap", width="100%", height="100%") ,
+                         
+                         absolutePanel(id = "controls", class = "panel panel-default",
+                                       top = 80, left = 30, width = 300, fixed=TRUE,
+                                       draggable = FALSE, height = "auto",
+                                       
+                                       h4("Info (test)"),
+                                       br(),
+                                       
+                                       fluidRow(column(12, verbatimTextOutput("sbaSelect")))
+                                       
+                         )
                         )
                     )
                },
@@ -571,19 +581,30 @@ server <- function(input, output) {
   }
   
   
+  
   ##########################
   #### Bird aggregations ###
   ##########################
+  
+  output$sbaSelect <- reactive({
+    sba$SBIRD_AREA[sba$OBJECTID==input$AggrMap_shape_click$id]
+  })
+  
   
   ### Maps  
   {
   cls  <- rev(paletteer_c("ggthemes::Red-Green Diverging", 6))
   brks <- c(0, 100, 1000, 5000, 10000, 50000, 2000000) 
+  labelText <- glue::glue("<b>Special Bird Area: </b> {sba$SBIRD_AREA} <br> Click for information (not implemented)")
   
   output$AggrMap <- renderLeaflet(
     leaflet(options = leafletOptions(zoomControl = FALSE)) %>% 
-      addProviderTiles(providers$Esri.WorldShadedRelief, group = "map") %>%
-      addProviderTiles(providers$CartoDB.VoyagerOnlyLabels, group = "label") %>%
+      addTiles(group = "StreetMap") %>%
+      addProviderTiles(providers$Esri.WorldShadedRelief, group = "Basemap") %>%
+      addProviderTiles(providers$CartoDB.VoyagerOnlyLabels, group = "Basemap") %>%
+      addLayersControl(baseGroups = c("Basemap", "StreetMap"),
+                       position = "topright") %>%
+      setView(lng = 131, lat = -28, zoom = 5) %>%
       addCircles(data = gridDens[[1]],
                  lng = ~lon,
                  lat = ~lat, 
@@ -593,12 +614,28 @@ server <- function(input, output) {
                  lng = ~lon,
                  lat = ~lat, 
                  stroke = FALSE,
+                 fillColor = ~color, fillOpacity = 0.8, radius = 7000, group = 'MidZoom') %>%
+      addCircles(data = gridDens[[3]],
+                 lng = ~lon,
+                 lat = ~lat, 
+                 stroke = FALSE,
                  fillColor = ~color, fillOpacity = 0.8, radius = 12500, group = 'MinZoom') %>%
       addPolygons(data = sba %>% st_transform(4326),
                   color = "black", weight = 2,
-                  fill = FALSE, group = "MaxZoom") %>%
-      groupOptions("MaxZoom", zoomLevels = 7:50) %>%
-      groupOptions("MinZoom", zoomLevels = 1:6) %>%
+                  fillColor = "orange", fillOpacity = 0.3,
+                  label = lapply(labelText, htmltools::HTML),
+                  labelOptions = labelOptions(noHide = F, direction = "top"),
+                  layerId = ~ OBJECTID,
+                  group = "MaxZoom")%>%
+      groupOptions("MaxZoom", zoomLevels = 8:20) %>%
+      groupOptions("MidZoom", zoomLevels = 5:7) %>%
+      groupOptions("MinZoom", zoomLevels = 1:4) %>%
+      addLegend("bottomright", 
+                colors = cls,
+                labels = c("1-100", "100-1,000", "1,000-5,000", "5,000-10,000", 
+                           "10,000-50,000", "50,000-2,000,000"),
+                title = "Abundance",
+                opacity = 1) %>%
       onRender(
         "function(el, x) {
           L.control.zoom({
@@ -607,7 +644,6 @@ server <- function(input, output) {
         }")
   )
   }
-  
 }
 
 

@@ -24,14 +24,22 @@ grid_detail <- densTab %>% st_transform(4326) %>%
          color = cls[cut(Max_of_Max, brks, labels = FALSE)]) %>%
   st_drop_geometry()
 
+grid_middle <- st_rasterize(densTab %>% dplyr::select(Max_of_Max), 
+                            st_as_stars(st_bbox(grid), dx = 15000, dy = 15000, values = NA, crs = st_crs(grid))) %>%
+  st_as_sf() %>% setNames(c("Max_of_Max", "geometry")) %>% st_centroid() %>% st_transform(4326)%>%
+  mutate(lon = st_coordinates(.)[,1], lat = st_coordinates(.)[,2]) %>%
+  mutate(color = cls[cut(Max_of_Max, brks, labels = FALSE)]) %>% st_drop_geometry()
+
 grid_large <- st_rasterize(densTab %>% dplyr::select(Max_of_Max), 
                        st_as_stars(st_bbox(grid), dx = 25000, dy = 25000, values = NA, crs = st_crs(grid))) %>%
   st_as_sf() %>% setNames(c("Max_of_Max", "geometry")) %>% st_centroid() %>% st_transform(4326)%>%
   mutate(lon = st_coordinates(.)[,1], lat = st_coordinates(.)[,2]) %>%
   mutate(color = cls[cut(Max_of_Max, brks, labels = FALSE)]) %>% st_drop_geometry()
 
-gridDens <- list(detail = grid_detail, zoom = grid_large)
+gridDens <- list(detail = grid_detail, middle = grid_middle, grid_outer = grid_large)
 save(gridDens, file = "data/distributionsGrid.rda")
+
+labelText <- glue::glue("<b>Special Bird Area: </b> {sba$SBIRD_AREA} <br> Click for information (not implemented)")
 
 leaflet(options = leafletOptions(zoomControl = FALSE)) %>% 
   addProviderTiles(providers$Esri.WorldShadedRelief, group = "map") %>%
@@ -45,18 +53,32 @@ leaflet(options = leafletOptions(zoomControl = FALSE)) %>%
              lng = ~lon,
              lat = ~lat, 
              stroke = FALSE,
+             fillColor = ~color, fillOpacity = 0.8, radius = 7000, group = 'MidZoom') %>%
+  addCircles(data = gridDens[[3]],
+             lng = ~lon,
+             lat = ~lat, 
+             stroke = FALSE,
              fillColor = ~color, fillOpacity = 0.8, radius = 12500, group = 'MinZoom') %>%
-  groupOptions("MaxZoom", zoomLevels = 7:20) %>%
-  groupOptions("MinZoom", zoomLevels = 1:6) %>%
+  addPolygons(data = sba %>% st_transform(4326),
+              color = "black", weight = 2,
+              fillColor = "orange", fillOpacity = 0.3,
+              label = lapply(labelText, htmltools::HTML),
+              labelOptions = labelOptions(noHide = F, direction = "top"),
+              group = "MaxZoom") %>%
+  groupOptions("MaxZoom", zoomLevels = 8:20) %>%
+  groupOptions("MidZoom", zoomLevels = 5:7) %>%
+  groupOptions("MinZoom", zoomLevels = 1:4) %>%
+  addLegend("bottomright", 
+            colors = cls,
+            labels = c("1-100", "100-1,000", "1,000-5,000", "5,000-10,000", "10,000-50,000", "50,000-2,000,000"),
+            title = "Abundance",
+            opacity = 1) %>%
   onRender(
     "function(el, x) {
           L.control.zoom({
             position:'topright'
           }).addTo(this);
         }")
-
-
-
 
 
 
