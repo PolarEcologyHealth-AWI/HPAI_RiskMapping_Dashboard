@@ -26,7 +26,7 @@ load("data/flagPts.rda")
 load("data/flagDens.rda")
 load("data/sf_tracks.rda")
 load("data/HPAIoutbreak.rda")
-load("data/starsAggr.rda")
+load("data/distributionsGrid.rda")
 load("data/sba.rdata")
 
 outbreakSM <- outbreakDat %>% st_drop_geometry() %>%
@@ -584,42 +584,21 @@ server <- function(input, output) {
     leaflet(options = leafletOptions(zoomControl = FALSE)) %>% 
       addProviderTiles(providers$Esri.WorldShadedRelief, group = "map") %>%
       addProviderTiles(providers$CartoDB.VoyagerOnlyLabels, group = "label") %>%
-      addGeoRaster(
-        starsAggr[[3]],
-        opacity = 0.85,
-        colorOptions = colorOptions(
-          breaks = brks,
-          palette = cls,
-          na.color = "transparent"
-        ),
-        group = "MaxZoom"
-      ) %>%
-      addGeoRaster(
-        starsAggr[[2]],
-        opacity = 0.85,
-        colorOptions = colorOptions(
-          breaks = brks,
-          palette = cls,
-          na.color = "transparent"
-        ),
-        group = "MedZoom"
-      ) %>%
-      addGeoRaster(
-        starsAggr[[1]],
-        opacity = 0.85,
-        colorOptions = colorOptions(
-          breaks = brks,
-          palette = cls,
-          na.color = "transparent"
-        ),
-        group = "MinZoom"
-      ) %>%
-      # addPolygons(data = sba %>% st_transform(4326), 
-      #             color = "black", weight = 2, 
-      #             fill = FALSE, group = "MinZoom") %>%
-      groupOptions("MinZoom", zoomLevels = 7:20) %>%
-      groupOptions("MedZoom", zoomLevels = 5:6) %>%
-      groupOptions("MaxZoom", zoomLevels = 1:4) %>%
+      addCircles(data = gridDens[[1]],
+                 lng = ~lon,
+                 lat = ~lat, 
+                 stroke = FALSE,
+                 fillColor = ~color, fillOpacity = 0.8, radius = 2000, group = 'MaxZoom') %>%
+      addCircles(data = gridDens[[2]],
+                 lng = ~lon,
+                 lat = ~lat, 
+                 stroke = FALSE,
+                 fillColor = ~color, fillOpacity = 0.8, radius = 12500, group = 'MinZoom') %>%
+      addPolygons(data = sba %>% st_transform(4326),
+                  color = "black", weight = 2,
+                  fill = FALSE, group = "MaxZoom") %>%
+      groupOptions("MaxZoom", zoomLevels = 7:50) %>%
+      groupOptions("MinZoom", zoomLevels = 1:6) %>%
       onRender(
         "function(el, x) {
           L.control.zoom({
