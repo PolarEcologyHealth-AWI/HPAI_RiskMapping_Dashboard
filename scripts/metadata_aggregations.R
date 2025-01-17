@@ -6,54 +6,90 @@ library(leaflet)
 library(leafem)
 library(paletteer)
 
-grid <- read_sf("~/Downloads/Chris/5km_grid_v8_1.shp") %>% st_transform(4326)
-data <- readxl::read_xls("~/Downloads/Chris/MASTER_HPAI_MAX_GRID.xls")
+grid <- read_sf("~/Downloads/ChrisPurnell_Latest/grid/5km_grid_v9.shp") %>% dplyr::select(TARGET_FID)
+data <- readxl::read_xlsx("~/Downloads/ChrisPurnell_Latest/MASTER_HPAI_GRID2.xlsx")
 
-bbox <- st_bbox(grid %>% st_transform(4326)) %>% st_set_crs(4326)
-crds <- st_coordinates(grid %>% st_centroid())
+grid_stars <- st_as_stars(st_bbox(grid), dx = 5000, dy = 5000, values = NA, crs = st_crs(grid))
 
-
-MaxCounts <- grid %>% mutate(TARGET_FID = 1:nrow(.)) %>%
-  left_join(data) %>%
-  filter(Max_of_Max>0) %>% st_centroid() %>% st_transform(4326) %>%
-  mutate(lng = st_coordinates(.)[,1], lat = st_coordinates(.)[,2]) %>%
-  st_drop_geometry() %>% st_as_sf(coords = c("lng", "lat"), crs = 4326)
-
-
-grd_stars <- st_as_stars(bbox, dx = length(unique(crds[,1])), ny = length(unique(crds[,2])), values = NA, crs = 4326)
-kmMin       <- st_rasterize(MaxCounts %>% dplyr::select(Max_of_Max), grd_stars)
-
-cls  <- rev(paletteer_c("ggthemes::Red-Green Diverging", 6))
+cls  <- rev(paletteer::paletteer_d("RColorBrewer::RdYlGn")[c(TRUE, FALSE)])
 brks <- c(0, 100, 1000, 5000, 10000, 50000, 2000000) 
 
-leaflet() %>%
+densTab <- grid %>% left_join(data %>% dplyr::select(TARGET_FID, Max_of_Max), by = "TARGET_FID") %>%
+  dplyr::select(TARGET_FID, Max_of_Max) %>% st_centroid()
+
+
+grid_detail <- densTab %>% st_transform(4326) %>%
+  mutate(lon   = st_coordinates(.)[,1], 
+         lat   = st_coordinates(.)[,2],
+         color = cls[cut(Max_of_Max, brks, labels = FALSE)]) %>%
+  st_drop_geometry()
+
+grid_middle <- st_rasterize(densTab %>% dplyr::select(Max_of_Max), 
+                            st_as_stars(st_bbox(grid), dx = 15000, dy = 15000, values = NA, crs = st_crs(grid))) # %>%
+  # st_as_sf() %>% setNames(c("Max_of_Max", "geometry")) %>% st_centroid() %>% st_transform(4326)%>%
+  # mutate(lon = st_coordinates(.)[,1], lat = st_coordinates(.)[,2]) %>%
+  # mutate(color = cls[cut(Max_of_Max, brks, labels = FALSE)]) %>%
+  # st_rasterize(st_as_stars(st_bbox(grid), dx = 15000, dy = 15000, values = NA, crs = st_crs(grid)))
+
+grid_large <- st_rasterize(densTab %>% dplyr::select(Max_of_Max), 
+                       st_as_stars(st_bbox(grid), dx = 25000, dy = 25000, values = NA, crs = st_crs(grid))) # %>%
+  # st_as_sf() %>% setNames(c("Max_of_Max", "geometry")) %>% st_centroid() %>% st_transform(4326)%>%
+  # mutate(lon = st_coordinates(.)[,1], lat = st_coordinates(.)[,2]) %>%
+  # mutate(color = cls[cut(Max_of_Max, brks, labels = FALSE)])  %>%
+  # st_rasterize(st_as_stars(st_bbox(grid), dx = 25000, dy = 25000, values = NA, crs = st_crs(grid)))
+
+
+gridDens <- list(detail = grid_detail, middle = grid_middle, grid_outer = grid_large)
+save(gridDens, file = "data/distributionsGrid.rda")
+
+labelText <- glue::glue("<b>Special Bird Area: </b> {sba$SBIRD_AREA} <br> Click for information (not implemented)")
+
+leaflet(options = leafletOptions(zoomControl = FALSE)) %>% 
   addProviderTiles(providers$Esri.WorldShadedRelief, group = "map") %>%
   addProviderTiles(providers$CartoDB.VoyagerOnlyLabels, group = "label") %>%
-  addGeoRaster(
-    kmMin,
-    opacity = 0.85,
-    colorOptions = colorOptions(
-      breaks = brks,
-      palette = cls,
-      na.color = "transparent"
-    )) %>%
-  addCircleMarkers(lng = st_coordinates(grid %>% st_centroid() %>% st_transform(4326))[,1],
-                   lat = st_coordinates(grid %>% st_centroid() %>% st_transform(4326))[,2], color = "black")
-    
+  addCircles(data = gridDens[[1]],
+             lng = ~lon,
+             lat = ~lat, 
+             stroke = FALSE,
+             fillColor = ~color, fillOpacity = 0.8, radius = 2000, group = 'MaxZoom') %>%
+  leafem:::addGeoRaster(
+            gridDens[[2]],
+            opacity = 0.6,
+            colorOptions = colorOptions(
+              breaks = brks,
+              palette = cls
+            )) %>%
+  # addCircles(data = gridDens[[2]],
+  #            lng = ~lon,
+  #            lat = ~lat, 
+  #            stroke = FALSE,
+  #            fillColor = ~color, fillOpacity = 0.8, radius = 7000, group = 'MidZoom') %>%
+  # addCircles(data = gridDens[[3]],
+  #            lng = ~lon,
+  #            lat = ~lat, 
+  #            stroke = FALSE,
+  #            fillColor = ~color, fillOpacity = 0.8, radius = 12500, group = 'MinZoom') %>%
+  # addPolygons(data = sba %>% st_transform(4326),
+  #             color = "black", weight = 2,
+  #             fillColor = "orange", fillOpacity = 0.3,
+  #             label = lapply(labelText, htmltools::HTML),
+  #             labelOptions = labelOptions(noHide = F, direction = "top"),
+  #             group = "MaxZoom") %>%
+  groupOptions("MaxZoom", zoomLevels = 8:20) %>%
+  groupOptions("MidZoom", zoomLevels = 5:7) %>%
+  groupOptions("MinZoom", zoomLevels = 1:4) %>%
+  addLegend("bottomright", 
+            colors = cls,
+            labels = c("1-100", "100-1,000", "1,000-5,000", "5,000-10,000", "10,000-50,000", "50,000-2,000,000"),
+            title = "Abundance",
+            opacity = 1) %>%
+  onRender(
+    "function(el, x) {
+          L.control.zoom({
+            position:'topright'
+          }).addTo(this);
+        }")
 
-
-
-kmMed <- st_rasterize(MaxCounts %>% dplyr::select(Max_of_Max), 
-                     st_as_stars(bbox, nx = round(length(unique(crds[,1]))/10, 0), 
-                                 ny = round(length(unique(crds[,2]))/10, 0), values = NA, crs = 4326))
-
-kmMax <- st_rasterize(MaxCounts %>% dplyr::select(Max_of_Max), 
-                      st_as_stars(bbox, nx = round(length(unique(crds[,1]))/25, 0), 
-                                  ny = round(length(unique(crds[,2]))/25, 0), values = NA, crs = 4326))
-
-
-starsAggr <- list(Max = kmMin, Med = kmMed, min = kmMax)
-save(starsAggr, file = "data/starsAggr.rda")
 
 
 ### Shorebird Areas
@@ -61,3 +97,14 @@ sba <- read_sf("~/Downloads/for simeon/SBIRD_AREA_260924/SBIRD_AREA_260924.shp")
   dplyr::select(OBJECTID, SBIRD_AREA) %>% st_simplify(dTolerance = 50)
 
 save(sba, file = "data/sba.rdata")
+
+
+### Cell data
+smAggrData <- data %>% dplyr::select('TARGET_FID', 'Max_of_Max', 'SPECIES COUNT', names(data)[-c(1:15)]) %>%
+  setNames(c('TARGET_FID', 'Max_of_Max', 'SPECIES_COUNT', names(data)[-c(1:15)])) %>%
+  filter(!is.na(SPECIES_COUNT)) %>%
+  left_join(grid %>% st_centroid() %>% st_transform(4326) %>% 
+              mutate(lon = st_coordinates(.)[,1], lat = st_coordinates(.)[,2]) %>% st_drop_geometry(), by = "TARGET_FID") %>%
+  mutate(sba = (sba %>% pull(SBIRD_AREA))[apply(st_intersects(st_as_sf(., coords = c("lon", "lat"), crs = 4326), sba %>% st_transform(4326), sparse = FALSE), 1, function(x) ifelse(any(x), which(x), NA))])
+
+save(smAggrData, file = "data/smAggrData.rdata")

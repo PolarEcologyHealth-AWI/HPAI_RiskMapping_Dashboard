@@ -19,6 +19,7 @@ sf_use_s2(FALSE)
 library(stars)
 
 load("data/metadata.rda")
+load("data/distributions_small.rda")
 load("data/flyway.rda")
 load("data/flegPhen.rda")
 load("data/flagPts.rda")
@@ -27,6 +28,7 @@ load("data/sf_tracks.rda")
 load("data/HPAIoutbreak.rda")
 load("data/distributionsGrid.rda")
 load("data/sba.rdata")
+load("data/smAggrData.rdata")
 
 outbreakSM <- outbreakDat %>% st_drop_geometry() %>%
   group_by(Year, is_wild) %>% summarise(sample = sum(sample))
@@ -129,19 +131,7 @@ ui <- fluidPage(
                                                                         status = "warning",
                                                                         right = FALSE
                                                                       ))
-                                                             ),
-                                                             
-                                                             # conditionalPanel(condition = "input.tracksNW",
-                                                             #   fluidRow(
-                                                             #     column(12, sliderTextInput(
-                                                             #       inputId = "tracks_day",
-                                                             #       label = "Date slider (not working):",
-                                                             #       choices = format(seq(as.POSIXct("2012-01-01"), as.POSIXct("2012-12-31"), by = "day"), "%d-%b"),
-                                                             #       selected = "01-Dec",
-                                                             #       animate = animationOptions(interval = 200, loop = T)
-                                                             #     ))
-                                                             #   )
-                                                             # )
+                                                             )
                                             )
                                             
                               ),
@@ -157,10 +147,7 @@ ui <- fluidPage(
                                                              h5("Select month with click on bar-chart"),
                                                              actionButton("reset", "Clear")
                                                )
-                              ),
-                              
-                              # absolutePanel(id = "logo", class = "card", bottom = 40, right = 20, fixed=TRUE, draggable = FALSE, height = "auto", width = "auto",
-                              #               tags$a(href='https://wildlifehealthaustralia.com.au/', tags$img(src='logos_small_horizontal.png', height = 75)))
+                              )
                           )
                  )
                },
@@ -213,13 +200,14 @@ ui <- fluidPage(
                          leafletOutput("AggrMap", width="100%", height="100%") ,
                          
                          absolutePanel(id = "controls", class = "panel panel-default",
-                                       top = 80, left = 30, width = 300, fixed=TRUE,
+                                       top = 80, left = 30, width = 350, fixed = TRUE,
                                        draggable = FALSE, height = "auto",
-                                       
-                                       h4("Info (test)"),
                                        br(),
-                                       
-                                       fluidRow(column(12, verbatimTextOutput("sbaSelect")))
+                                       conditionalPanel(
+                                         condition = "input.AggrMap_shape_click != null",
+                                         plotOutput("speciesPie", width = 320),
+                                         plotOutput("speciesLegend", width = 320)
+                                       )
                                        
                          )
                         )
@@ -585,17 +573,55 @@ server <- function(input, output) {
   ##########################
   #### Bird aggregations ###
   ##########################
+  set.seed(10)
+  birdCol <- tibble(name = names(smAggrData)[-c(1:3, (ncol(smAggrData)-3):ncol(smAggrData))],
+                    col   = colors()[sample(1:length(colors()), 30)])
   
-  output$sbaSelect <- reactive({
-    sba$SBIRD_AREA[sba$OBJECTID==input$AggrMap_shape_click$id]
+  output$speciesPie <- renderPlot({
+    tmp <- smAggrData %>% filter(TARGET_FID==input$AggrMap_shape_click$id)
+    
+    dat <- tmp[,-c(1:3, (ncol(tmp)-3):ncol(tmp))] %>% pivot_longer(cols = everything()) %>%
+      filter(!is.na(value), value>0) %>%
+      left_join(birdCol, by = 'name')
+    
+    ggplot(dat, aes(x = "", y = value, fill = name)) +
+      geom_bar(stat="identity", width = 1, show.legend = F) +
+      scale_fill_manual(values = dat$col) +
+      coord_polar("y", start=0) +
+      geom_text(aes(label = ifelse(value*100<5, '', paste0(round(value*100,2), "%"))), 
+                position = position_stack(vjust=0.5)) +
+      theme_void() +
+      labs(x = NULL, y = NULL, fill = NULL,
+           title    = ifelse(!is.na(tmp$sba), glue::glue("Shorebird Area: {tmp$sba}"), ""),
+           subtitle = paste0("Waterbird Species: ", tmp$SPECIES_COUNT, "\n", "Max abundance: ", tmp$Max_of_Max)) +
+      theme(plot.title = element_text(size=17),
+            plot.subtitle = element_text(size=17))
   })
   
+  output$speciesLegend <- renderPlot({
+    
+    tmp <- smAggrData %>% filter(TARGET_FID==input$AggrMap_shape_click$id)
+    
+    dat <- tmp[,-c(1:3, (ncol(tmp)-3):ncol(tmp))] %>% pivot_longer(cols = everything()) %>%
+      filter(!is.na(value), value>0) %>%
+      left_join(birdCol, by = 'name')
+    
+    
+    legendGG <- ggplot(dat, aes(x = name, y = value, fill = name)) +
+      geom_bar(stat="identity", width = 1, show.legend = T) +
+      scale_fill_manual(values = dat$col) +
+      labs(fill = '') +
+      guides(nrow = nrow(dat))
+
+    as_ggplot(get_legend(legendGG))
+    
+  })
   
   ### Maps  
   {
   cls  <- rev(paletteer_c("ggthemes::Red-Green Diverging", 6))
   brks <- c(0, 100, 1000, 5000, 10000, 50000, 2000000) 
-  labelText <- glue::glue("<b>Special Bird Area: </b> {sba$SBIRD_AREA} <br> Click for information (not implemented)")
+  labelText <- glue::glue("<b>Special Bird Area: </b> {sba$SBIRD_AREA}")
   
   output$AggrMap <- renderLeaflet(
     leaflet(options = leafletOptions(zoomControl = FALSE)) %>% 
@@ -605,31 +631,48 @@ server <- function(input, output) {
       addLayersControl(baseGroups = c("Basemap", "StreetMap"),
                        position = "topright") %>%
       setView(lng = 131, lat = -28, zoom = 5) %>%
-      addCircles(data = gridDens[[1]],
-                 lng = ~lon,
-                 lat = ~lat, 
-                 stroke = FALSE,
-                 fillColor = ~color, fillOpacity = 0.8, radius = 2000, group = 'MaxZoom') %>%
-      addCircles(data = gridDens[[2]],
-                 lng = ~lon,
-                 lat = ~lat, 
-                 stroke = FALSE,
-                 fillColor = ~color, fillOpacity = 0.8, radius = 7000, group = 'MidZoom') %>%
-      addCircles(data = gridDens[[3]],
-                 lng = ~lon,
-                 lat = ~lat, 
-                 stroke = FALSE,
-                 fillColor = ~color, fillOpacity = 0.8, radius = 12500, group = 'MinZoom') %>%
       addPolygons(data = sba %>% st_transform(4326),
                   color = "black", weight = 2,
                   fillColor = "orange", fillOpacity = 0.3,
                   label = lapply(labelText, htmltools::HTML),
                   labelOptions = labelOptions(noHide = F, direction = "top"),
-                  layerId = ~ OBJECTID,
-                  group = "MaxZoom")%>%
-      groupOptions("MaxZoom", zoomLevels = 8:20) %>%
-      groupOptions("MidZoom", zoomLevels = 5:7) %>%
-      groupOptions("MinZoom", zoomLevels = 1:4) %>%
+                  group = "MaxZoom") %>%
+      addCircles(data = gridDens[[1]],
+                 lng = ~lon,
+                 lat = ~lat,
+                 stroke = FALSE,
+                 fillColor = ~color, 
+                 fillOpacity = 0.6,
+                 radius = 1900, 
+                 group = 'MaxZoom') %>%
+      addCircles(
+        data = smAggrData,
+        lng = ~lon,
+        lat = ~lat,
+        layerId = ~ TARGET_FID,
+        radius = 1900,
+        fill = TRUE,
+        fillColor = "transparent",
+        color = "black",
+        weight = 0.5,
+        group = 'MaxZoom') %>%
+      addGeoRaster(
+                gridDens[[2]],
+                opacity = 0.6,
+                colorOptions = colorOptions(
+                  breaks = brks,
+                  palette = cls),
+                group = 'MidZoom') %>%
+      addGeoRaster(
+                gridDens[[3]],
+                opacity = 0.6,
+                colorOptions = colorOptions(
+                  breaks = brks,
+                  palette = cls),
+                group = 'MinZoom') %>%
+      groupOptions("MaxZoom", zoomLevels = 7:20) %>%
+      groupOptions("MidZoom", zoomLevels = 4:6) %>%
+      groupOptions("MinZoom", zoomLevels = 1:3) %>%
       addLegend("bottomright", 
                 colors = cls,
                 labels = c("1-100", "100-1,000", "1,000-5,000", "5,000-10,000", 
