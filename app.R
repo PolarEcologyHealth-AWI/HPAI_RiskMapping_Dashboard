@@ -1,9 +1,9 @@
 require(shiny)
 require(shinythemes)
-require(shinythemes)
 require(shinydashboard)
 require(shinyWidgets)
 library(shinyjs)
+library(shinyBS)
 require(htmlwidgets)
 library(echarts4r)
 library(bslib)
@@ -12,7 +12,7 @@ library(leafem)
 library(tidyverse)
 library(paletteer)
 library(ggthemes)
-library(shinyBS)
+library(wesanderson)
 library(ggpubr)
 library(sf)
 sf_use_s2(FALSE)
@@ -26,15 +26,24 @@ load("data/flagPts.rda")
 load("data/flagDens.rda")
 load("data/sf_tracks.rda")
 load("data/HPAIoutbreak.rda")
-load("data/distributionsGrid.rda")
-load("data/sba.rdata")
-load("data/smAggrData.rdata")
+load("data/sba_trans.rda")
+load("data/birdAggr.rda")
 
 outbreakSM <- outbreakDat %>% st_drop_geometry() %>%
   group_by(Year, is_wild) %>% summarise(sample = sum(sample))
 
 legendDistr <- dist %>% st_drop_geometry %>% filter(!duplicated(CODE)) %>%
   dplyr::select(CODE, COLOR)
+
+outbreakDB <- outbreakDat %>% 
+  bind_rows(outbreakDat %>% st_shift_longitude) %>%
+  st_as_sf(coords = c("Longitude", "Latitude"), crs = 4326) %>%
+  mutate(color = ifelse(is_wild, "slateblue", "chocolate"))
+
+
+grps      <- readxl::read_xlsx("data/SpGroups.xlsx") 
+spPalette <- tibble(group = grps$GroupNew %>% unique(),
+                    color = wes_palette("AsteroidCity1")[c(1,4,2,3,5)])
 
 #### UI ####
 ui <- fluidPage(
@@ -51,14 +60,54 @@ ui <- fluidPage(
                id = "nav",
                windowTitle = "Dashboard",
                 
-               tabPanel("Home",
-                        includeHTML("www/about.html")
-               ),
-               
-               #### Shorebird Movements ####
+               #### Home #####
                {
-                 tabPanel("Shorebird Movements",
+                 tabPanel("Home",
+                          div(class = "outer",
+                              br(),
+                              br(),
+                              br(),
+                              fluidRow(
+                                column(1),
+                                column(10, includeHTML("www/Home.html")),
+                                column(1)
+                              )
+                          )
+                 )
+               },
+               
+               #### HPAIV Outbreaks #####
+               {
+                 tabPanel("HPAI Outbreaks",
+                          div(class="outer",
+                              tags$head(includeCSS("styles.css")),
+                              
+                              leafletOutput("OutbreakMap", width="100%", height="100%"),
+                              
+                              absolutePanel(id = "controls", class = "panel panel-default",
+                                            top = 80, left = 30, width = 300, fixed=TRUE,
+                                            draggable = FALSE, height = "auto",
+                                            h4("HPAI Outbreaks:"),
+                                            br(),
+                                            fluidRow(
+                                              column(12, sliderTextInput("hpai_month", label = "", 
+                                                                         grid = TRUE, force_edges = FALSE, hide_min_max = TRUE,
+                                                                         choices = as.character(seq(2005, 2024, by = 1)),
+                                                                         selected = 2015, animate = T))
+                                            ),
+                                              plotOutput("Outbreak_Legend", width = 160, height = 80),
+                                              br(),
+                                              plotOutput("outbreakGraph", width = 275, height = 220)
+                              )
+                          )
                           
+                 )
+               },
+               
+               #### Bird migrations ####
+               {
+                 tabPanel("Bird migrations",
+                          id = "bird_migrations",
                           div(class="outer",
                               tags$head(includeCSS("styles.css")),
                               
@@ -68,16 +117,15 @@ ui <- fluidPage(
                                             top = 80, left = 30, width = 300, fixed=TRUE,
                                             draggable = FALSE, height = "auto",
                                             
-                                            h4("Select species:"),
+                                            h4("Shorebirds:"),
                                             
                                             selectInput(
                                               inputId = "species",
                                               label = "",
                                               selected = "Red-necked Stint",
-                                              choices = c("All", meta$species),
+                                              choices = c("All", meta$species[!grepl("Shearwater", meta$species)]),
                                             ),
                                             
-                                            hr(style = "border-top: 1px solid #74b9e1;"),
                                             h4("Species Distribution:"),
                                             
                                             conditionalPanel(condition = "input.species.length > 0",
@@ -90,7 +138,6 @@ ui <- fluidPage(
                                                              )
                                             ),
                                             
-                                            hr(style = "border-top: 1px solid #74b9e1;"),
                                             h4("Leg-flag resightings:"),
                                             
                                             conditionalPanel(condition = "input.species.length > 0",
@@ -112,8 +159,6 @@ ui <- fluidPage(
                                                              )
                                             ),
                                             
-                                            hr(style = "border-top: 1px solid #74b9e1;"),
-                                            
                                             conditionalPanel(condition = paste0("['All', '", paste0(unique(sf_tracks$Species), collapse = "', '"), "'].indexOf(input.species) !== -1"),
                                                              h4("Migration tracks:"),
                                                              fluidRow(
@@ -132,7 +177,26 @@ ui <- fluidPage(
                                                                         right = FALSE
                                                                       ))
                                                              )
+                                            ),
+                                            
+                                            hr(style = "border-top: 1px solid #74b9e1;"),
+                                            
+                                            h4("Seabirds:"),
+                                            
+                                            selectInput(
+                                              inputId = "seabirds",
+                                              label = "",
+                                              selected = "All",
+                                              choices = c("All", meta$species[grepl("Shearwater", meta$species)]),
+                                            ),
+                                            
+                                            h4("Migration tracks:"),
+                                            
+                                            fluidRow(
+                                              column(8, materialSwitch("seabirdMigrations", "Migrations", status = "info", value = FALSE))
                                             )
+                                            
+                                            
                                             
                               ),
                               
@@ -152,42 +216,11 @@ ui <- fluidPage(
                  )
                },
                
-               #### HPAIV Outbreaks #####
+               #### Species at Risk ####
                {
-               tabPanel("HPAI Outbreaks",
-                        
-                        div(class="outer",
-                            tags$head(includeCSS("styles.css")),
-                            
-                            leafletOutput("OutbreakMap", width="100%", height="100%"),
-                            
-                            absolutePanel(id = "controls", class = "panel panel-default",
-                                          top = 80, left = 30, width = 300, fixed=TRUE,
-                                          draggable = FALSE, height = "auto",
-                                          
-                                          h4("HPAI Outbreaks:"),
-                                          br(),
-                                          
-                                          fluidRow(
-                                            column(6, materialSwitch("outbreaks", "Show", status = "info", value = FALSE))),
-                                          
-                                          fluidRow(
-                                            column(12, sliderTextInput("hpai_month", label = "", 
-                                                                       grid = TRUE, force_edges = FALSE, hide_min_max = TRUE,
-                                                                       choices = as.character(seq(2005, 2024, by = 1)),
-                                                                       selected = 2015, animate = T))
-                                          ),
-                                          
-                                          conditionalPanel(
-                                            condition = "input.outbreaks",
-                                            plotOutput("Outbreak_Legend", width = 160, height = 80),
-                                            br(),
-                                            plotOutput("outbreakGraph", width = 275, height = 220)
-                                          )
-                                          
-                                          )
-                        )
-                            
+               tabPanel("Species at Risk",
+                        # div(class = "outer"
+                        # )
                )
                },
                
@@ -203,21 +236,60 @@ ui <- fluidPage(
                                        top = 80, left = 30, width = 350, fixed = TRUE,
                                        draggable = FALSE, height = "auto",
                                        br(),
+                                       h4("Maximum count:"),
+                                       verbatimTextOutput("MaxCount"),
                                        conditionalPanel(
                                          condition = "input.AggrMap_shape_click != null",
                                          plotOutput("speciesPie", width = 320),
-                                         plotOutput("speciesLegend", width = 320)
+                                         hr(style = "border-top: 1px solid #74b9e1;"),
+                                         fluidRow(
+                                           column(8, materialSwitch("speciesDetail", "Details", status = "info", value = FALSE))
+                                         ),
+                                         conditionalPanel(
+                                           condition = "input.speciesDetail",
+                                           plotOutput("speciesDetail", width = 320)
+                                         )
                                        )
-                                       
                          )
+                         
                         )
                     )
                },
                
-               tabPanel("Species at Risk",
-                        div(class = "outer",
-                        )
-               )
+               #### Further info #####
+               {
+                 tabPanel("Data information",
+                          div(class = "outer",
+                              br(),
+                              br(),
+                              br(),
+                              br(),
+                              fluidRow(
+                                column(1),
+                                column(10, includeHTML("www/Information.html")),
+                                column(1)
+                              )
+                          )
+                 )
+               },
+               
+               #### About #####
+               {
+                 tabPanel("About",
+                          div(class = "outer",
+                              br(),
+                              br(),
+                              br(),
+                              br(),
+                              fluidRow(
+                                column(1),
+                                column(10, includeHTML("www/About.html")),
+                                column(1)
+                              )
+                          )
+                 )
+               }
+               
     ),
   )
 )
@@ -227,8 +299,75 @@ ui <- fluidPage(
 server <- function(input, output) {
   
   ###################
-  #### Movement #####
+  #### Outbreaks ####
   ###################
+  
+  ### Points
+  {
+    
+    outbreakData <- reactive({
+      outbreakDB %>% filter(Year == input$hpai_month)
+    })
+    
+    
+    output$outbreakGraph <- renderPlot({
+      ggplot(outbreakSM %>% mutate(color = ifelse(Year==input$hpai_month, "black", "transparent")), 
+             aes(x = Year, y = sample, fill = is_wild, color = as.factor(color))) +
+        geom_bar(stat="identity", show.legend = FALSE) +
+        scale_fill_manual(values = c("chocolate", "slateblue")) +
+        scale_color_manual(values = c("black", "transparent")) +
+        xlab('') + ylab('# Reported cases') +
+        theme_light()
+    })
+    
+  }
+  
+  ### Maps 
+  {
+    output$Outbreak_Legend <- renderPlot({
+      pl <- ggplot(tibble(y = c(1,1), x = c(1,2), col = c("Domestic birds", "Wild birds")), aes(x = x, y = y, color = col)) +
+        geom_point(size = 10) +
+        scale_color_manual(values = c("chocolate", "slateblue")) +
+        theme(
+          legend.background = element_rect(fill = "white"),
+          legend.title = element_blank(),
+          legend.text = element_text(size = 15),
+          legend.key.size = unit(1.5, 'cm')
+        )
+      
+      as_ggplot(get_legend(pl))
+    })
+    
+    output$OutbreakMap <- renderLeaflet(
+      leaflet(options = leafletOptions(zoomControl = FALSE)) %>% 
+        setView(lng = 170, lat = 30, zoom = 3) %>%
+        addProviderTiles(providers$Esri.WorldShadedRelief, group = "map") %>%
+        addProviderTiles(providers$CartoDB.VoyagerOnlyLabels, group = "label") %>%
+        onRender(
+          "function(el, x) {
+          L.control.zoom({
+            position:'topright'
+          }).addTo(this);
+        }")
+    )
+    
+    observeEvent(input$nav, {
+      leafletProxy("OutbreakMap", data = outbreakDB %>% filter(Year == input$hpai_month)) %>%
+        addCircles(color = ~color, fillOpacity = 0.6, weight = 6)
+    })
+    
+    observe({
+      leafletProxy("OutbreakMap", data = outbreakData()) %>%
+        clearShapes() %>%
+        clearControls() %>%
+        addCircles(color = ~color, fillOpacity = 0.6, weight = 6)
+    })
+    
+  }
+  
+  #####################
+  #### Migrations #####
+  #####################
   
   ### Distribution
   {
@@ -394,7 +533,6 @@ server <- function(input, output) {
   })
   
   trackingData <- reactive({
-    
     if(input$species!="All") {
       sf_tracks %>%
         mutate(Days = ifelse(Type==2, 1, Days)) %>%
@@ -404,22 +542,20 @@ server <- function(input, output) {
     } else {
       sf_tracks %>%
         mutate(Days = ifelse(Type==2, 1, Days)) %>%
+        filter(Species == meta$species[-14:15]) %>%
         rename(Weight = allWeight)  %>%
         mutate(Weight = ifelse(Type%in%c(0,2), 1, Weight))
     }
-    
-    # doy <- as.numeric(format(as.POSIXct(glue::glue("2012-{input$tracks_day}"), format = "%Y-%d-%b"), "%j"))+1
-    # if(input$species=="All") {
-    #   sf_tracks %>% 
-    #     filter(Days <= doy,
-    #            Split == max(Split))
-    # } else {
-    #   sf_tracks %>% 
-    #     filter(Species==input$species,
-    #            Date <= doy) %>%
-    #     mutate(Days = ifelse(Type==2, 1, Days)) %>%
-    #     filter(Split==max(Split))
-    # }
+  })
+  
+  trackingSeabirdData <- reactive({
+    if(input$seabirds!="All") {
+      sf_tracks %>%
+        filter(Species == input$seabirds)
+    } else {
+      sf_tracks %>%
+        filter(Species == meta$species[14:15])
+    }
   })
   
   }
@@ -487,7 +623,7 @@ server <- function(input, output) {
       for(i in unique(trackingData()$ID)) {
         proxy <- proxy %>%
           addPolylines(data = trackDat %>%
-                         filter(ID==i),
+                       filter(ID==i),
                        color = "#888683",
                        fillOpacity = 0.5,
                        weight = ~0.7,
@@ -501,121 +637,85 @@ server <- function(input, output) {
                    fillOpacity = 0.4,
                    weight = ~Weight, group = 'flags')
     }
-  })
-  }
-  
-  
-  ###################
-  #### Outbreaks ####
-  ###################
-  
-  ### Points
-  {
-  outbreakData <- reactive({
-      outbreakDat %>% 
-        bind_rows(outbreakDat %>% st_shift_longitude) %>% filter(Year == input$hpai_month) %>%
-        st_as_sf(coords = c("Longitude", "Latitude"), crs = 4326) 
-  })
-  
-  output$outbreakGraph <- renderPlot({
-    ggplot(outbreakSM %>% mutate(color = ifelse(Year==input$hpai_month, "black", "transparent")), 
-           aes(x = Year, y = sample, fill = is_wild, color = as.factor(color))) +
-      geom_bar(stat="identity", show.legend = FALSE) +
-      scale_fill_manual(values = c("chocolate", "slateblue")) +
-      scale_color_manual(values = c("black", "transparent")) +
-      xlab('') + ylab('# Reported cases') +
-      theme_light()
-  })
-  
-  }
-  
-  ### Maps 
-  {
-  output$Outbreak_Legend <- renderPlot({
-    pl <- ggplot(tibble(y = c(1,1), x = c(1,2), col = c("Domestic birds", "Wild birds")), aes(x = x, y = y, color = col)) +
-      geom_point(size = 10) +
-      scale_color_manual(values = c("chocolate", "slateblue")) +
-      theme(
-        legend.background = element_rect(fill = "white"),
-        legend.title = element_blank(),
-        legend.text = element_text(size = 15),
-        legend.key.size = unit(1.5, 'cm')
-      )
     
-    as_ggplot(get_legend(pl))
-  })
-  
-  output$OutbreakMap <- renderLeaflet(
-    leaflet(options = leafletOptions(zoomControl = FALSE)) %>% 
-      setView(lng = 170, lat = 30, zoom = 3) %>%
-      addProviderTiles(providers$Esri.WorldShadedRelief, group = "map") %>%
-      addProviderTiles(providers$CartoDB.VoyagerOnlyLabels, group = "label") %>%
-      onRender(
-        "function(el, x) {
-          L.control.zoom({
-            position:'topright'
-          }).addTo(this);
-        }")
-  )
-  
-  observe({
-    if(input$outbreaks) {
-    leafletProxy("OutbreakMap", data = outbreakData()) %>%
-      clearShapes() %>%
-      clearControls() %>%
-      addCircles(color = ifelse(outbreakData()$is_wild, "slateblue", "chocolate"), fillOpacity = 0.6, weight = 6)
+    if(input$seabirdMigrations) {
+
+      for(i in unique(trackingSeabirdData()$ID)) {
+        proxy <- proxy %>%
+          addPolylines(data = trackingSeabirdData() %>% filter(ID==i),
+                       color = "#888683",
+                       fillOpacity = 0.5,
+                       weight = ~0.7,
+                       lng = ~Lon,
+                       lat = ~Lat, group = 'flags')
+      }
+    
+      proxy <- proxy %>%
+        addCircles(data = trackingSeabirdData(),
+                   color = ~Color,
+                   fillOpacity = 0.3,
+                   weight = ~0.4, group = 'flags')
     }
+    
   })
+  
   }
-  
-  
   
   ##########################
   #### Bird aggregations ###
   ##########################
-  set.seed(10)
-  birdCol <- tibble(name = names(smAggrData)[-c(1:3, (ncol(smAggrData)-3):ncol(smAggrData))],
-                    col   = colors()[sample(1:length(colors()), 30)])
   
   output$speciesPie <- renderPlot({
-    tmp <- smAggrData %>% filter(TARGET_FID==input$AggrMap_shape_click$id)
+    if(!is.null(input$AggrMap_shape_click$id)) {
+      tmp <- birdAggr[[1]] %>% filter(RID==input$AggrMap_shape_click$id)
     
-    dat <- tmp[,-c(1:3, (ncol(tmp)-3):ncol(tmp))] %>% pivot_longer(cols = everything()) %>%
-      filter(!is.na(value), value>0) %>%
-      left_join(birdCol, by = 'name')
-    
-    ggplot(dat, aes(x = "", y = value, fill = name)) +
-      geom_bar(stat="identity", width = 1, show.legend = F) +
-      scale_fill_manual(values = dat$col) +
-      coord_polar("y", start=0) +
-      geom_text(aes(label = ifelse(value*100<5, '', paste0(round(value*100,2), "%"))), 
-                position = position_stack(vjust=0.5)) +
-      theme_void() +
-      labs(x = NULL, y = NULL, fill = NULL,
-           title    = ifelse(!is.na(tmp$sba), glue::glue("Shorebird Area: {tmp$sba}"), ""),
-           subtitle = paste0("Waterbird Species: ", tmp$SPECIES_COUNT, "\n", "Max abundance: ", tmp$Max_of_Max)) +
-      theme(plot.title = element_text(size=17),
-            plot.subtitle = element_text(size=17))
+      tmp %>% dplyr::select(spPalette$group) %>% pivot_longer(cols = everything()) %>%
+        ggplot(., mapping = aes(x = "", y = value, fill = name)) +
+        geom_bar(stat="identity", width = 1, show.legend = T) +
+        scale_fill_manual(values = spPalette$color, breaks = spPalette$group) +
+        coord_polar("y", start=0) +
+        geom_text(aes(label = ifelse(value*100<5, '', paste0(round(value*100,0), "%"))),
+                  position = position_stack(vjust=0.5),
+                  size = 7, color = "grey30") +
+        labs(x = NULL, y = NULL, fill = NULL) +
+        theme_void() +
+        theme(legend.position = "bottom",
+              legend.text = element_text(size = 18)) +
+        guides(fill = guide_legend(nrow = 2, byrow=TRUE))
+    }
   })
   
-  output$speciesLegend <- renderPlot({
-    
-    tmp <- smAggrData %>% filter(TARGET_FID==input$AggrMap_shape_click$id)
-    
-    dat <- tmp[,-c(1:3, (ncol(tmp)-3):ncol(tmp))] %>% pivot_longer(cols = everything()) %>%
-      filter(!is.na(value), value>0) %>%
-      left_join(birdCol, by = 'name')
-    
-    
-    legendGG <- ggplot(dat, aes(x = name, y = value, fill = name)) +
-      geom_bar(stat="identity", width = 1, show.legend = T) +
-      scale_fill_manual(values = dat$col) +
-      labs(fill = '') +
-      guides(nrow = nrow(dat))
-
-    as_ggplot(get_legend(legendGG))
-    
+  
+  output$speciesDetail <- renderPlot({
+    if(!is.null(input$AggrMap_shape_click$id)) {
+      tmp <- birdAggr[[1]] %>% filter(RID==input$AggrMap_shape_click$id) %>% 
+        dplyr::select(-spPalette$group, -sba, -RID, -Max_of_Max, -SPECIES_COUNT) %>% 
+        pivot_longer(cols = everything()) %>%
+        filter(!is.na(value), value >0) %>%
+        left_join(grps[,1:2], by = join_by("name"=="Group"))
+      
+      ggplot(tmp, mapping = aes(x = reorder(name, value), y = value*100)) +
+          geom_bar(stat="identity", width = 0.7, fill = "grey40", show.legend = F) +
+          coord_flip() +
+          labs(x = NULL, y = "Percentage") +
+          scale_x_discrete(labels = gsub("(break)", "\n", tmp$Label)) +
+          theme_light() +
+          theme(axis.text.y = element_text(size = 13))
+    }
   })
+
+  output$MaxCount <- renderText({
+    if(!is.null(input$AggrMap_shape_click$id)) {
+      birdAggr[[1]] %>% filter(RID==input$AggrMap_shape_click$id) %>% pull(Max_of_Max)
+    } else "no selection"
+    })
+  
+  # output$sba <- renderText({
+  #   if(!is.null(input$AggrMap_shape_click$id)) {
+  #     sba_out <- birdAggr[[1]] %>% filter(RID==input$AggrMap_shape_click$id) %>% pull(sba)
+  #     ifelse(is.na(sba_out), "", sba_out)
+  #   } else "no selection"
+  # })
   
   ### Maps  
   {
@@ -631,48 +731,42 @@ server <- function(input, output) {
       addLayersControl(baseGroups = c("Basemap", "StreetMap"),
                        position = "topright") %>%
       setView(lng = 131, lat = -28, zoom = 5) %>%
-      addPolygons(data = sba %>% st_transform(4326),
-                  color = "black", weight = 2,
-                  fillColor = "orange", fillOpacity = 0.3,
-                  label = lapply(labelText, htmltools::HTML),
-                  labelOptions = labelOptions(noHide = F, direction = "top"),
-                  group = "MaxZoom") %>%
-      addCircles(data = gridDens[[1]],
-                 lng = ~lon,
-                 lat = ~lat,
-                 stroke = FALSE,
-                 fillColor = ~color, 
-                 fillOpacity = 0.6,
-                 radius = 1900, 
-                 group = 'MaxZoom') %>%
-      addCircles(
-        data = smAggrData,
-        lng = ~lon,
-        lat = ~lat,
-        layerId = ~ TARGET_FID,
-        radius = 1900,
-        fill = TRUE,
-        fillColor = "transparent",
-        color = "black",
-        weight = 0.5,
-        group = 'MaxZoom') %>%
       addGeoRaster(
-                gridDens[[2]],
+              birdAggr[[3]],
+              opacity = 0.6,
+              colorOptions = colorOptions(
+                breaks = brks,
+                palette = cls),
+              group = 'MaxZoom') %>%
+      addGeoRaster(
+                birdAggr[[4]],
                 opacity = 0.6,
                 colorOptions = colorOptions(
                   breaks = brks,
                   palette = cls),
                 group = 'MidZoom') %>%
       addGeoRaster(
-                gridDens[[3]],
+                birdAggr[[5]],
                 opacity = 0.6,
                 colorOptions = colorOptions(
                   breaks = brks,
                   palette = cls),
                 group = 'MinZoom') %>%
+      addPolygons(data = birdAggr[[2]],
+                  weight = 0,
+                  fillColor = "transparent",
+                  layerId = ~ RID,
+                  group = "MaxZoom") %>%
+      addPolygons(data = sba,
+                  color = "black", weight = 1,
+                  fillColor = "grey50", fillOpacity = 0.2,
+                  layerId = ~ OBJECTID,
+                  label = lapply(labelText, htmltools::HTML),
+                  labelOptions = labelOptions(noHide = F, direction = "top"),
+                  group = "MaxZoom") %>%
       groupOptions("MaxZoom", zoomLevels = 7:20) %>%
-      groupOptions("MidZoom", zoomLevels = 4:6) %>%
-      groupOptions("MinZoom", zoomLevels = 1:3) %>%
+      groupOptions("MidZoom", zoomLevels = 5:6) %>%
+      groupOptions("MinZoom", zoomLevels = 1:4) %>%
       addLegend("bottomright", 
                 colors = cls,
                 labels = c("1-100", "100-1,000", "1,000-5,000", "5,000-10,000", 

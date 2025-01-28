@@ -1,13 +1,13 @@
-library(tidyverse)
-library(sf)
-sf_use_s2(FALSE)
-library(stars)
-library(spatstat)
-library(RColorBrewer)
-
+# library(tidyverse)
+# library(sf)
+# sf_use_s2(FALSE)
+# library(stars)
+# library(spatstat)
+# library(RColorBrewer)
+# 
 ### Flyway ###
 ##############
-
+# 
 # plot(rnaturalearthdata::coastline50 %>% st_as_sf() %>% st_shift_longitude() %>% st_geometry())
 # pts <- locator()
 # 
@@ -17,7 +17,7 @@ library(RColorBrewer)
 # flyway <- smoothr::smooth(poly, method = "ksmooth")
 # plot(flyway, add = T, col = "red")
 # save(flyway, file = "data/flyway.rda")
-load("data/flyway.rda")
+# load("data/flyway.rda")
 
 
 
@@ -37,7 +37,9 @@ meta <- tibble(species =
                    "Ruddy Turnstone",
                    "Sanderling",
                    "Sharp-tailed Sandpiper",
-                   "Terek Sandpiper"
+                   "Terek Sandpiper",
+                   "Short-tailed Shearwater",
+                   "Wedge-tailed Shearwater"
                  ), 
                SCINAME = 
                  c("All",
@@ -52,7 +54,9 @@ meta <- tibble(species =
                    "Arenaria interpres",
                    "Calidris alba",
                    "Calidris acuminata",
-                   "Xenus cinereus"),
+                   "Xenus cinereus",
+                   "Ardenna tenuirostris",
+                   "Puffinus pacificus"),
                TrackName = 
                  c("All",
                    "Godwit",
@@ -66,7 +70,9 @@ meta <- tibble(species =
                    "Turnstone",
                    "Sanderling",
                    NA,
-                   NA))
+                   NA,
+                   "ShortTailedShearwaters",
+                   "WedgeTailedShearwaters"))
 
 # save(meta, file = "data/metadata.rda")
 
@@ -119,7 +125,7 @@ meta <- tibble(species =
 # oz <- smoothr::smooth(poly, method = "ksmooth")
 # plot(oz, add = T, col = "red")
 # save(oz, file = "data/oz.rda")
-load("data/oz.rda")
+# load("data/oz.rda")
 
 ## Grid
 # grd <- st_make_grid(flyway %>% st_transform("+proj=laea + lon_0=145"), cellsize = 250000, square = FALSE) %>%
@@ -316,144 +322,161 @@ load("data/flagsDB.rda")
 # save(flegPhen, file = "data/flegPhen.rda")
 # load("data/flegPhen.rda")
 }
-
-
-
+# 
+# 
+# 
 ### Geolocator Data #### 
 ########################
+# 
+# wd <- "/Users/slisovsk/Library/CloudStorage/GoogleDrive-simeon.lisovski@gmail.com/My Drive/Science/Projects/OptimalMigChange/Data/Tracks/"
+# 
+# trk_list <- tibble(path = list.files(wd, recursive = T)) %>%
+#   mutate(species = sapply(strsplit(path, "/"), function(x) x[1]),
+#          ID = sapply(strsplit(path, "/"), function(x) sapply(strsplit(x[2], "_"), function(y) y[1]))) %>%
+#   filter(species %in% meta$TrackName) %>% left_join(meta, by = join_by(species == TrackName)) %>%
+#   dplyr::select(path, ID, species.y) %>% rename(species = species.y) %>%
+#   group_split(species)
+# 
+# sf_tracks <- lapply(1:6, function(r) {
+#   x <- trk_list[[r]]
+#   lapply(1:nrow(x), function(y) {
+#     
+#     if(r%in%c(2,4,5)) {
+#       tmp <- read.csv(paste0(wd, x$path[y]))
+#       if(any(tmp$Type==2)) {
+#         out<- tmp %>%
+#           mutate(ID         = x$ID[y],
+#                  Species    = x$species[y],
+#                  Date       = as.numeric(format(as.POSIXct(StartTime), "%j")),
+#                  Site       = 1:nrow(.)) %>%
+#           dplyr::select(Species, ID, Site, Date, Days, Type, Lon.50., Lat.50.)
+#         if(out$Type[1]==0) out$Date[1] = 1 
+#         
+#         join <- full_join(out %>% group_by(Date) %>% 
+#                             summarise(Lon = median(Lon.50.), Lat = median(Lat.50.), Type = min(Type), Site = min(Site)), 
+#                           tibble(ID = out$ID[1], Species = out$Species[1], Date = 1:365), by = 'Date') %>%
+#           arrange(Date) %>% dplyr::select(Species, ID, Site, Date, Type, Lon, Lat) %>%
+#           fill(Type, Site, Lon, Lat)
+#         
+#         join$Days = group_split(join, Site) %>% 
+#           lapply(function(x) ifelse(x$Type==0, rep(1, nrow(x)), cumsum(rep(1, nrow(x))))) %>% Reduce("c", .)    
+#         
+#         join %>% st_as_sf(coords = c("Lon", "Lat"), crs = 4326) %>% 
+#           mutate(Lon = st_coordinates(.)[,1],
+#                  Lat = st_coordinates(.)[,2]) %>%
+#           group_split(ID) %>%
+#           lapply(function(i) {
+#             split <- round(mean(which(i$Lat==max(i$Lat))),0)
+#             i$Split <- 1
+#             i$Split[(split+1):nrow(i)] <- 2
+#             i
+#           }) %>% Reduce("rbind", .) %>%
+#           mutate(Color = ifelse(Split==1, "#14668c", "#cd930d"),
+#                  Color = ifelse(Type==0, "black", Color)) %>%
+#           dplyr::select(Species, ID, Date, Type, Days, Split, Color, Lon, Lat)
+#         
+#       }
+#     } else if(r==1) {
+#       tmp <- read.csv(paste0(wd, x$path[y]))
+#       if(any(tmp$Type==2)) {
+#         out<- tmp %>%
+#           mutate(ID         = x$ID[y],
+#                  Species    = x$species[y],
+#                  Date1      = as.numeric(format(as.POSIXct(Arrival.50.), "%j")),
+#                  Date2      = as.numeric(format(as.POSIXct(Departure.50.), "%j")),
+#                  Site       = site) %>%
+#           pivot_longer(cols = c(Date1, Date2)) %>%
+#           rename(Date = value)  %>%
+#           dplyr::select(Species, ID, Site, Date, Type, Lon.50., Lat.50.)
+#         if(out$Type[1]==0) out$Date[1] = 1 
+#         
+#         join <- full_join(out %>% group_by(Date) %>% 
+#                             summarise(Lon = median(Lon.50.), Lat = median(Lat.50.), Type = min(Type), Site = min(Site)), 
+#                           tibble(ID = out$ID[1], Species = out$Species[1], Date = 1:365), by = 'Date') %>%
+#           arrange(Date) %>% dplyr::select(Species, ID, Site, Date, Type, Lon, Lat) %>%
+#           fill(Type, Site, Lon, Lat)
+#         
+#         join$Days = group_split(join, Site) %>% 
+#           lapply(function(x) ifelse(x$Type==0, rep(1, nrow(x)), cumsum(rep(1, nrow(x))))) %>% Reduce("c", .)    
+#         
+#         join %>% st_as_sf(coords = c("Lon", "Lat"), crs = 4326) %>% 
+#           mutate(Lon = st_coordinates(.)[,1],
+#                  Lat = st_coordinates(.)[,2]) %>%
+#           group_split(ID) %>%
+#           lapply(function(i) {
+#             split <- round(mean(which(i$Lat==max(i$Lat))),0)
+#             i$Split <- 1
+#             i$Split[(split+1):nrow(i)] <- 2
+#             i
+#           }) %>% Reduce("rbind", .) %>%
+#           mutate(Color = ifelse(Split==1, "#14668c", "#cd930d"),
+#                  Color = ifelse(Type==0, "black", Color)) %>%
+#           dplyr::select(Species, ID, Date, Type, Days, Split, Color, Lon, Lat)
+#       }
+#     } else if(r%in%c(3,6)) {
+#       tmp <- read.csv(paste0(wd, x$path[y]))
+#       if(any(tmp$type==2)) {
+#         out<- tmp %>% rename(Type = type) %>%
+#           mutate(ID         = x$ID[y],
+#                  Species    = x$species[y],
+#                  Date1      = as.numeric(format(as.POSIXct(Arrival), "%j")),
+#                  Date2      = as.numeric(format(as.POSIXct(Departure), "%j")),
+#                  Site       = 1:nrow(.)) %>%
+#           pivot_longer(cols = c(Date1, Date2)) %>%
+#           rename(Date = value)  %>%
+#           dplyr::select(Species, ID, Site, Date, Type, Lon, Lat) %>%
+#           filter(!is.na(Date))
+#         if(out$Type[1]==0) out$Date[1] = 1 
+#         
+#         join <- full_join(out %>% group_by(Date) %>% 
+#                           summarise(Lon = median(Lon), Lat = median(Lat), Type = min(Type), Site = min(Site)), 
+#                           tibble(ID = out$ID[1], Species = out$Species[1], Date = 1:365), by = 'Date') %>%
+#           arrange(Date) %>% dplyr::select(Species, ID, Site, Date, Type, Lon, Lat) %>%
+#           fill(Type, Site, Lon, Lat)
+#         
+#         join$Days = group_split(join, Site) %>% 
+#           lapply(function(x) ifelse(x$Type==0, rep(1, nrow(x)), cumsum(rep(1, nrow(x))))) %>% Reduce("c", .)    
+#         
+#         join %>% st_as_sf(coords = c("Lon", "Lat"), crs = 4326) %>% 
+#           mutate(Lon  = st_coordinates(.)[,1],
+#                  Lat  = st_coordinates(.)[,2]) %>%
+#           group_split(ID) %>%
+#           lapply(function(i) {
+#             split <- round(mean(which(i$Lat==max(i$Lat))),0)
+#             i$Split <- 1
+#             i$Split[(split+1):nrow(i)] <- 2
+#             i
+#           }) %>% Reduce("rbind", .) %>%
+#           mutate(Color = ifelse(Split==1, "#14668c", "#cd930d"),
+#                  Color = ifelse(Type==0, "black", Color)) %>%
+#           dplyr::select(Species, ID, Date, Type, Days, Split, Color, Lon, Lat)
+#       }
+#     }
+#     
+#     }) %>% Reduce("rbind",.)
+# }) %>% lapply(function(x) {
+#   x %>% mutate(
+#     spWeight = approx(range(Days), c(0.5, 40), Days)$y, .before = "geometry"
+#   )
+# }) %>% Reduce("rbind", .) %>%
+#   mutate(allWeight = approx(range(Days), c(0.5, 40), Days)$y, .before = "geometry")
+# 
+# save(sf_tracks, file = "data/sf_tracks.rda")
+load("data/sf_tracks.rda")
 
-wd <- "/Users/slisovsk/Library/CloudStorage/GoogleDrive-simeon.lisovski@gmail.com/My Drive/Science/Projects/OptimalMigChange/Data/Tracks/"
 
-trk_list <- tibble(path = list.files(wd, recursive = T)) %>%
-  mutate(species = sapply(strsplit(path, "/"), function(x) x[1]),
-         ID = sapply(strsplit(path, "/"), function(x) sapply(strsplit(x[2], "_"), function(y) y[1]))) %>%
-  filter(species %in% meta$TrackName) %>% left_join(meta, by = join_by(species == TrackName)) %>%
-  dplyr::select(path, ID, species.y) %>% rename(species = species.y) %>%
-  group_split(species)
-
-sf_tracks <- lapply(1:6, function(r) {
-  x <- trk_list[[r]]
-  lapply(1:nrow(x), function(y) {
-    
-    if(r%in%c(2,4,5)) {
-      tmp <- read.csv(paste0(wd, x$path[y]))
-      if(any(tmp$Type==2)) {
-        out<- tmp %>%
-          mutate(ID         = x$ID[y],
-                 Species    = x$species[y],
-                 Date       = as.numeric(format(as.POSIXct(StartTime), "%j")),
-                 Site       = 1:nrow(.)) %>%
-          dplyr::select(Species, ID, Site, Date, Days, Type, Lon.50., Lat.50.)
-        if(out$Type[1]==0) out$Date[1] = 1 
-        
-        join <- full_join(out %>% group_by(Date) %>% 
-                            summarise(Lon = median(Lon.50.), Lat = median(Lat.50.), Type = min(Type), Site = min(Site)), 
-                          tibble(ID = out$ID[1], Species = out$Species[1], Date = 1:365), by = 'Date') %>%
-          arrange(Date) %>% dplyr::select(Species, ID, Site, Date, Type, Lon, Lat) %>%
-          fill(Type, Site, Lon, Lat)
-        
-        join$Days = group_split(join, Site) %>% 
-          lapply(function(x) ifelse(x$Type==0, rep(1, nrow(x)), cumsum(rep(1, nrow(x))))) %>% Reduce("c", .)    
-        
-        join %>% st_as_sf(coords = c("Lon", "Lat"), crs = 4326) %>% 
-          mutate(Lon = st_coordinates(.)[,1],
-                 Lat = st_coordinates(.)[,2]) %>%
-          group_split(ID) %>%
-          lapply(function(i) {
-            split <- round(mean(which(i$Lat==max(i$Lat))),0)
-            i$Split <- 1
-            i$Split[(split+1):nrow(i)] <- 2
-            i
-          }) %>% Reduce("rbind", .) %>%
-          mutate(Color = ifelse(Split==1, "#14668c", "#cd930d"),
-                 Color = ifelse(Type==0, "black", Color)) %>%
-          dplyr::select(Species, ID, Date, Type, Days, Split, Color, Lon, Lat)
-        
-      }
-    } else if(r==1) {
-      tmp <- read.csv(paste0(wd, x$path[y]))
-      if(any(tmp$Type==2)) {
-        out<- tmp %>%
-          mutate(ID         = x$ID[y],
-                 Species    = x$species[y],
-                 Date1      = as.numeric(format(as.POSIXct(Arrival.50.), "%j")),
-                 Date2      = as.numeric(format(as.POSIXct(Departure.50.), "%j")),
-                 Site       = site) %>%
-          pivot_longer(cols = c(Date1, Date2)) %>%
-          rename(Date = value)  %>%
-          dplyr::select(Species, ID, Site, Date, Type, Lon.50., Lat.50.)
-        if(out$Type[1]==0) out$Date[1] = 1 
-        
-        join <- full_join(out %>% group_by(Date) %>% 
-                            summarise(Lon = median(Lon.50.), Lat = median(Lat.50.), Type = min(Type), Site = min(Site)), 
-                          tibble(ID = out$ID[1], Species = out$Species[1], Date = 1:365), by = 'Date') %>%
-          arrange(Date) %>% dplyr::select(Species, ID, Site, Date, Type, Lon, Lat) %>%
-          fill(Type, Site, Lon, Lat)
-        
-        join$Days = group_split(join, Site) %>% 
-          lapply(function(x) ifelse(x$Type==0, rep(1, nrow(x)), cumsum(rep(1, nrow(x))))) %>% Reduce("c", .)    
-        
-        join %>% st_as_sf(coords = c("Lon", "Lat"), crs = 4326) %>% 
-          mutate(Lon = st_coordinates(.)[,1],
-                 Lat = st_coordinates(.)[,2]) %>%
-          group_split(ID) %>%
-          lapply(function(i) {
-            split <- round(mean(which(i$Lat==max(i$Lat))),0)
-            i$Split <- 1
-            i$Split[(split+1):nrow(i)] <- 2
-            i
-          }) %>% Reduce("rbind", .) %>%
-          mutate(Color = ifelse(Split==1, "#14668c", "#cd930d"),
-                 Color = ifelse(Type==0, "black", Color)) %>%
-          dplyr::select(Species, ID, Date, Type, Days, Split, Color, Lon, Lat)
-      }
-    } else if(r%in%c(3,6)) {
-      tmp <- read.csv(paste0(wd, x$path[y]))
-      if(any(tmp$type==2)) {
-        out<- tmp %>% rename(Type = type) %>%
-          mutate(ID         = x$ID[y],
-                 Species    = x$species[y],
-                 Date1      = as.numeric(format(as.POSIXct(Arrival), "%j")),
-                 Date2      = as.numeric(format(as.POSIXct(Departure), "%j")),
-                 Site       = 1:nrow(.)) %>%
-          pivot_longer(cols = c(Date1, Date2)) %>%
-          rename(Date = value)  %>%
-          dplyr::select(Species, ID, Site, Date, Type, Lon, Lat) %>%
-          filter(!is.na(Date))
-        if(out$Type[1]==0) out$Date[1] = 1 
-        
-        join <- full_join(out %>% group_by(Date) %>% 
-                          summarise(Lon = median(Lon), Lat = median(Lat), Type = min(Type), Site = min(Site)), 
-                          tibble(ID = out$ID[1], Species = out$Species[1], Date = 1:365), by = 'Date') %>%
-          arrange(Date) %>% dplyr::select(Species, ID, Site, Date, Type, Lon, Lat) %>%
-          fill(Type, Site, Lon, Lat)
-        
-        join$Days = group_split(join, Site) %>% 
-          lapply(function(x) ifelse(x$Type==0, rep(1, nrow(x)), cumsum(rep(1, nrow(x))))) %>% Reduce("c", .)    
-        
-        join %>% st_as_sf(coords = c("Lon", "Lat"), crs = 4326) %>% 
-          mutate(Lon  = st_coordinates(.)[,1],
-                 Lat  = st_coordinates(.)[,2]) %>%
-          group_split(ID) %>%
-          lapply(function(i) {
-            split <- round(mean(which(i$Lat==max(i$Lat))),0)
-            i$Split <- 1
-            i$Split[(split+1):nrow(i)] <- 2
-            i
-          }) %>% Reduce("rbind", .) %>%
-          mutate(Color = ifelse(Split==1, "#14668c", "#cd930d"),
-                 Color = ifelse(Type==0, "black", Color)) %>%
-          dplyr::select(Species, ID, Date, Type, Days, Split, Color, Lon, Lat)
-      }
-    }
-    
-    }) %>% Reduce("rbind",.)
-}) %>% lapply(function(x) {
-  x %>% mutate(
-    spWeight = approx(range(Days), c(0.5, 40), Days)$y, .before = "geometry"
-  )
-}) %>% Reduce("rbind", .) %>%
-  mutate(allWeight = approx(range(Days), c(0.5, 40), Days)$y, .before = "geometry")
-
-save(sf_tracks, file = "data/sf_tracks.rda")
-
+#### Shearwaters
+# fls <- tibble(path    = list.files("~/Downloads/Marcel Klassen Files", pattern = ".csv", full.names = T),
+#               species = ifelse(sapply(strsplit(path, "-"), function(x) x[[2]]) == "STSW", "Short-tailed Shearwater", "Wedge-tailed Shearwater"),
+#               id      = sapply(strsplit(path, "-"), function(x) gsub("Track.csv","", x[[length(x)]])))
+# 
+# 
+# sw_tracks <- lapply(1:nrow(fls), function(i) {
+#   read_csv(fls$path[i]) %>% suppressMessages() %>% st_as_sf(coords = c("Lon.mean", "Lat.mean"), crs = 4326) %>%
+#     mutate(Species = fls$species[i], ID = fls$id[i], Date = as.numeric(format(Time, "%j")), Type = NA, Days = NA, 
+#            Split = NA, Color = "black", Lon = st_coordinates(.)[,1], Lat = st_coordinates(.)[,2], spWeight = NA, allWeight = NA) %>%
+#     dplyr::select(names(sf_tracks))
+# }) %>% Reduce("rbind",.)
+# 
+# sf_tracks <- sf_tracks %>% bind_rows(sw_tracks)
+# save(sf_tracks, file = "data/sf_tracks.rda")

@@ -20,4 +20,4 @@ outbreakDat <- Is_sf_grid %>% mutate(Lon = st_coordinates(.)[,1],
   st_drop_geometry() %>% group_by(Year = as.numeric(format(Date, "%Y")), Grid = grd, is_wild) %>%
   summarise(sample = n(), lon = median(Lon), lat = median(Lat)) %>% st_as_sf(coords = c("lon", "lat"), crs = 4326)
 
-save(outbreakDat, file = "data/HPAIoutbreak.rda")
+save(outbreakDat, file = "HPAIoutbreak.rda")
