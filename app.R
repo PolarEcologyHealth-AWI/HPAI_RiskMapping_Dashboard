@@ -7,6 +7,7 @@ library(shinyBS)
 require(htmlwidgets)
 library(echarts4r)
 library(bslib)
+library(colorRamps)
 require(leaflet)
 library(leafem)
 library(tidyverse)
@@ -29,6 +30,12 @@ load("data/HPAIoutbreak.rda")
 load("data/sba_trans.rda")
 load("data/birdAggr.rda")
 
+### Pre-calculations
+{
+sf_tracks <- sf_tracks %>% 
+  mutate(Color = ifelse(Species%in%c("Short-tailed Shearwater", "Wedge-tailed Shearwater"),
+                 rainbow(365)[Date], Color))
+
 outbreakSM <- outbreakDat %>% st_drop_geometry() %>%
   group_by(Year, is_wild) %>% summarise(sample = sum(sample))
 
@@ -44,6 +51,7 @@ outbreakDB <- outbreakDat %>%
 grps      <- readxl::read_xlsx("data/SpGroups.xlsx") 
 spPalette <- tibble(group = grps$GroupNew %>% unique(),
                     color = wes_palette("AsteroidCity1")[c(1,4,2,3,5)])
+}
 
 #### UI ####
 ui <- fluidPage(
@@ -56,9 +64,8 @@ ui <- fluidPage(
     
     navbarPage(theme = shinytheme("flatly"), 
                collapsible = TRUE, fluid = TRUE,
+               id = "navbar",
                title = HTML('<a style="text-decoration:none;cursor:default;color:#FFFFFF;" class="active" href="#">High Pathogenicity Avian Influenza (HPAI) Risk for Australia</a>'), 
-               id = "nav",
-               windowTitle = "Dashboard",
                 
                #### Home #####
                {
@@ -107,7 +114,6 @@ ui <- fluidPage(
                #### Bird migrations ####
                {
                  tabPanel("Bird migrations",
-                          id = "bird_migrations",
                           div(class="outer",
                               tags$head(includeCSS("styles.css")),
                               
@@ -193,10 +199,12 @@ ui <- fluidPage(
                                             h4("Migration tracks:"),
                                             
                                             fluidRow(
-                                              column(8, materialSwitch("seabirdMigrations", "Migrations", status = "info", value = FALSE))
+                                              column(8, materialSwitch("seabirdMigrations", "Migrations", status = "info", value = FALSE)),
+                                              conditionalPanel("input.seabirdMigrations==true",
+                                              column(9, plotOutput("pieSeabird", width = 270, height = 270))
+                                              )
                                             )
-                                            
-                                            
+
                                             
                               ),
                               
@@ -240,14 +248,14 @@ ui <- fluidPage(
                                        verbatimTextOutput("MaxCount"),
                                        conditionalPanel(
                                          condition = "input.AggrMap_shape_click != null",
-                                         plotOutput("speciesPie", width = 320),
+                                         plotOutput("speciesPie", width = 330, height = 300),
                                          hr(style = "border-top: 1px solid #74b9e1;"),
                                          fluidRow(
                                            column(8, materialSwitch("speciesDetail", "Details", status = "info", value = FALSE))
                                          ),
                                          conditionalPanel(
                                            condition = "input.speciesDetail",
-                                           plotOutput("speciesDetail", width = 320)
+                                           plotOutput("speciesDetail", width = 330, height = 250)
                                          )
                                        )
                          )
@@ -653,12 +661,31 @@ server <- function(input, output) {
       proxy <- proxy %>%
         addCircles(data = trackingSeabirdData(),
                    color = ~Color,
-                   fillOpacity = 0.3,
+                   fillOpacity = 1,
                    weight = ~0.4, group = 'flags')
     }
     
   })
   
+  output$pieSeabird <- renderPlot({
+    data <- tibble(doy = 1:52, p = rep(1, 52), color = rainbow(52))
+    
+    ggplot(data, mapping = aes(x = rep(1, 52), y = p, fill = as.factor(doy))) +
+      geom_bar(stat = "identity", show.legend = FALSE, color = "transparent") +
+      coord_polar("y", start = 0) +
+      scale_fill_manual(values = rainbow(52)) +
+      scale_y_continuous(breaks = as.numeric(format(seq(as.POSIXct("2020-01-01"),
+                                                        as.POSIXct("2020-12-01"), by = "month"), "%U")),
+                         label = format(seq(as.POSIXct("2020-01-01"),
+                                            as.POSIXct("2020-12-01"), by = "month"), "%b")) +
+      xlim(c(0.01, 1.6)) +
+      theme_minimal() +
+      labs(x = "", y = "") +
+      theme(axis.text.x = element_text(size = 16),
+            axis.text.y = element_blank(),
+            panel.grid.major = element_blank(),
+            panel.grid.minor = element_blank())
+  })
   }
   
   ##########################
@@ -676,15 +703,14 @@ server <- function(input, output) {
         coord_polar("y", start=0) +
         geom_text(aes(label = ifelse(value*100<5, '', paste0(round(value*100,0), "%"))),
                   position = position_stack(vjust=0.5),
-                  size = 7, color = "grey30") +
+                  size = 7, color = "grey20") +
         labs(x = NULL, y = NULL, fill = NULL) +
         theme_void() +
         theme(legend.position = "bottom",
-              legend.text = element_text(size = 18)) +
+              legend.text = element_text(size = 15)) +
         guides(fill = guide_legend(nrow = 2, byrow=TRUE))
     }
   })
-  
   
   output$speciesDetail <- renderPlot({
     if(!is.null(input$AggrMap_shape_click$id)) {
@@ -723,7 +749,8 @@ server <- function(input, output) {
   brks <- c(0, 100, 1000, 5000, 10000, 50000, 2000000) 
   labelText <- glue::glue("<b>Special Bird Area: </b> {sba$SBIRD_AREA}")
   
-  output$AggrMap <- renderLeaflet(
+  output$AggrMap <- renderLeaflet({
+    
     leaflet(options = leafletOptions(zoomControl = FALSE)) %>% 
       addTiles(group = "StreetMap") %>%
       addProviderTiles(providers$Esri.WorldShadedRelief, group = "Basemap") %>%
@@ -779,7 +806,8 @@ server <- function(input, output) {
             position:'topright'
           }).addTo(this);
         }")
-  )
+    
+  })
   }
 }
 
