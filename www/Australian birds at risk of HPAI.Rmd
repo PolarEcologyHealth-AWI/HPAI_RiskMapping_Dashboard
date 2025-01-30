@@ -1,0 +1,372 @@
+---
+title: "Australian bird species at risk of HPAI Clade 2.3.4.4b after an incursion event"
+date: "2024-11-12"
+output: 
+  html_document:
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+library(tidyverse)
+library(ggsignif)
+library(emmeans)
+library(viridis)
+library(brms)
+library(ape)
+library(phangorn)
+library(castor)
+library(ggtree)
+library(RColorBrewer)
+library(patchwork)
+library(kableExtra)
+library(DT)
+library(plotly)
+conWLAB <- read_csv("data/conWLAB.csv")
+prunedtree <- read.tree("data/prunedtree.tre")
+HPAI_withold <- read_csv("data/HPAI_withold.csv")
+FamPhyl.1 <- readRDS("data/FamPhyl1_Jan.rds")
+```
+
+The aim of this document is to predict susceptibility of Australian birds to Highly Pathogenic Avian Influenza Clade 2.3.4.4b (hereon, HPAI). We do this using a phylogenetic modelling approach, where we apply a family-level phylogenetic model on the HPAI notifications from the current panzootic, to determine the phylogenetic signal in HPAI susceptibility. Outbreak data was retrieved from WAHIS (World Animal Health Information System) of the World Organisation for Animal Health (WOAH) on 06/01/2025. 
+
+Since genetically related species importantly also share physiological, behavioural and ecological characteristics, our approach of using family-level phylogenetic signal also serves as a proxy for species sharing similar habitats/ecologies. Thus, we assume that the phylogeny of birds also informs on the specific environmental conditions they prefer (e.g. freshwater habitats), their specific behaviours (e.g. colony breeding), and foraging strategies (e.g. scavenging) and therewith their propensity to become infected with HPAI.  In other words, we assume that species in a family are similarly susceptible, regardless of how common those species are and how often those species may have or may not have been tested for HPAI. We elaborate more on the validity of this approach in the "Why using family, rather than ecological traits, makes sense for predicting HPAI" section, and on the assumptions and caveats of this analysis in the "Data comments" section below. 
+
+Since HPAI susceptibility is likely importantly determined by the preferred environmental conditions, specific behaviours, foraging strategies and other behavioural and ecological conditions, we would like to stress that our analysis predicts disease susceptibility in *natural* settings and not necessarily for birds in captivity. As is obvious from the current panzootic, we should assume that the disease *can* spread to all species of birds. 
+
+## Step one: modelling outbreak prevalence among avian families
+
+The first step in our analysis is to model the number of HPAI notifications of the current avian influenza panzootic to determine the phylogenetic signal. The HPAI notifications in our dataset are all since October 2021 and are all from outside of Australia, and have been reported to the WOAH-WAHIS database. While not all cases are confirmed to be HPAI clade 2.3.4.4b, this is most likely the case for the vast majority. The model includes a family-level phylogeny of affected birds, from [Kuhl et al. 2021](https://doi.org/10.1093/molbev/msaa191).
+
+
+```{r, fig.width=8, fig.height=8}
+phyl2 <- read.nexus("data/output.nex")
+phylcon2 <- maxCladeCred(phyl2)
+PhylSp <- unique(phylcon2$tip.label)
+keep <- as.vector(PhylSp[(PhylSp %in% HPAI_withold$scientificName)])
+phyl2 <- drop.tip(phylcon2, phylcon2$tip.label[-match(keep,phylcon2$tip.label)])
+PhylSp2 <- unique(phyl2$tip.label)
+HPAIold_raw <- HPAI_withold %>% select(scientificName, Order, Outbreaks)
+```
+```{r, fig.width=10, fig.height=10}
+HPAIold_raw <- HPAIold_raw %>% 
+  mutate(index = match(scientificName, phylcon2$tip.label))
+p <- ggtree(phylcon2, layout = "circular") %<+% HPAIold_raw + 
+  geom_tippoint(aes(color = log10(Outbreaks), size = log10(Outbreaks))) + 
+  scale_color_gradient(low= "blue", high = "red",
+                       name = "Number of HPAI notifications (logged)") + 
+  scale_size_continuous(range = c(0.5,4), breaks = c(500,100,5))+
+  theme(legend.position = "right", legend.key.size = unit(0.5,"cm"),
+        legend.text = element_text(size= 10), 
+        legend.title = element_text(size = 12))+ 
+  xlim(0,150)+ 
+  guides(size=guide_legend(title="Number of HPAI notifications (logged)"))
+species_to_order <- HPAIold_raw %>%
+  filter(scientificName %in% phylcon2$tip.label) %>%
+  distinct(scientificName, Order)
+tip_order <- p$data %>%
+  filter(isTip) %>%
+  left_join(species_to_order, by = c("label" = "scientificName"))
+order_labels <- tip_order %>%
+  group_by(Order.x) %>%
+  summarize(
+    angle = mean(y),
+    x = max(x) + 5,  # Place just outside the tree's edge
+    y = mean(y)
+  ) %>% 
+  mutate(
+    adj_angle = ifelse(angle > 90 & angle < 280, angle + 180, angle),  # Flip angles
+    hjust = ifelse(angle > 90 & angle < 280, 1, 0)  # Adjust horizontal alignment
+  )
+
+p +
+  geom_text(
+    data = order_labels,
+    aes(x = x, y = y, label = Order.x, angle = adj_angle, hjust = hjust),
+    #    vjust = 2,   # Adjust vertical alignment
+    size = 4
+  )
+ 
+```
+
+The model reports a statistically significant phylogenetic signal (on a scale of 0-1, Pagel's lambda: 0.91, 95% CI: 0.54 - 1.00), and the phylogeny shows clusterings of outbreaks amongst **ducks and geese** (Anseriformes), **seabirds** (Suliformes), **shorebirds** (Charadriiformes), **birds of prey** (Accipitriformes and Falconiformes), and **crows** (within Passeriformes).
+
+## Step two: Predicting susceptibility to HPAI outbreaks in Australian species
+
+We used the above model to predict which Australian species are likely to be particularly susceptible to HPAI outbreaks, again using a family-level phylogeny. The list of Australian birds we used is the [BirdLife Working List of Australian Birds](https://birdata.birdlife.org.au/whats-in-a-name), which has been pruned to exclude rare vagrants and very uncommon non-native species. Susceptibility to HPAI outbreaks was expressed on a scale from 0-1. This score was based on the predicted number of HPAI notifications by the model outlined above, where 80 predicted notifications represented a susceptibility index of 1.  We deemed any species that had an estimated HPAI susceptibility index of 0.5 or more as being moderately susceptible, and 0.8 or more as being highly susceptible. 
+
+```{r, fig.width=25, fig.height=25}
+fams <- unique(prunedtree$tip.label)
+famsDS <- unique(HPAI_withold$Family)
+famsAus <- unique(conWLAB$Family)
+famsNew <- famsAus[!(famsAus %in% famsDS)]
+famsBoth <- c(famsDS, famsAus)
+#famsBoth[!(famsBoth %in% fams)]
+todrop2 <- fams[!(fams %in% famsBoth)]
+prunedtree3 <- drop.tip(prunedtree, todrop2)
+```
+```{r, results='hide'}
+FamilyAvg <- HPAI_withold %>% 
+  group_by(Family) %>% summarise(Outbreaks = mean(Outbreaks))
+new <- famsAus[!(famsAus %in% famsDS)]
+new_ds <- data.frame(Family = new, Outbreaks = NA)
+FamilyAvgFull <- rbind(FamilyAvg, new_ds)
+FamilyAvgFull <- FamilyAvgFull[match(prunedtree3$tip.label, FamilyAvgFull$Family), ]
+all.equal(prunedtree3$tip.label, FamilyAvgFull$Family)
+outbreaksdata <- FamilyAvgFull$Outbreaks
+
+predictedPIC <- hsp_independent_contrasts(prunedtree3, outbreaksdata)
+
+# Extract the tip-specific values from the results
+tip_states <- predictedPIC$states[1:length(prunedtree3$tip.label)]
+# Combine with tip labels to create a dataframe
+tip_results <- data.frame(Family = prunedtree3$tip.label, Outbreaks = tip_states)
+
+tip_resultsAus <- tip_results %>% filter(Family %in% famsAus)
+
+normalize_log <- function(x) {
+  log_x <- log(x + 1)  # Add 1 to avoid log(0)
+  return((log_x - min(log_x)) / (4.4 - min(log_x))) #edited max to make highest scale 0.99, rather than 1.0
+}
+
+# Apply normalization
+tip_resultsAus <- tip_resultsAus %>% 
+  mutate(HPAISusceptibilityIndex = normalize_log(Outbreaks))
+```
+
+```{r, fig.width=10, fig.height=10}
+todrop2 <- fams[!(fams %in% famsAus)]
+prunedtree4 <- drop.tip(prunedtree, todrop2)
+
+ggtree(prunedtree4, layout = "circular", branch.length = "none") %<+% tip_resultsAus + 
+  geom_tiplab(size = 3.5)+
+  geom_tippoint(aes(color = HPAISusceptibilityIndex, size = HPAISusceptibilityIndex)) + 
+  scale_color_gradient(low= "blue", high = "red",
+                       name = "Predicted HPAI susceptibility") + 
+  scale_size_continuous(range = c(0.5,4), breaks = c(0.01, 0.5, 0.99))+
+  theme(legend.position = "right", legend.key.size = unit(0.5,"cm"),
+        legend.text = element_text(size= 10), 
+        legend.title = element_text(size = 12))+ 
+  xlim(0,30)+ 
+  guides(size=guide_legend(title="Predicted HPAI susceptibility"))
+```
+
+Lastly, we present a full list of HPAI outbreak susceptibility for all Australian species. While not used in calculating their susceptibility index (again, only phylogeny was used to that effect), aside from susceptibility index, the table also includes some of the key ecological attributes that are thought important in determining species' outbreak susceptibility. The ecological traits include whether it congregates or not, whether it breeds in colonies, and its predominant habitat and diet. The list is currently ordered by families with the highest estimated outbreaks, but can be ordered based on other columns by interacting with the column headings. The table can also be downloaded using a range of formats.
+
+```{r, fig.width=20, fig.height=20}
+predicted <- conWLAB %>% 
+  left_join(tip_resultsAus, by = "Family")
+treedat <- predicted %>% select(FamilyCommonName, TaxonName, HPAISusceptibilityIndex, CongregateTrue, `Colony?`, Habitat_Groupings, Diet_Groupings)
+treedat <- treedat %>% arrange(desc(HPAISusceptibilityIndex))
+treedat <- treedat %>% rename("Family" = "FamilyCommonName",
+                              "Species" = "TaxonName",
+                              "Estimated HPAI Susceptibility Index" = "HPAISusceptibilityIndex")
+datatable(treedat, colnames = c("Habitat" = "Habitat_Groupings", "Diet" = "Diet_Groupings", "Congregating bird?" = "CongregateTrue", "Colony breeder?" = "Colony?"), options = list(iDisplayLength = 25, dom = 'Blfrtip', buttons = c('copy', 'csv', 'excel', 'pdf')), extensions = 'Buttons') %>% 
+  formatRound(columns = "Estimated HPAI Susceptibility Index", digits = 2)
+```
+
+## Why using family, rather than ecological traits, makes sense for predicting HPAI
+
+In the approach outlined above, we use family-level phylogeny to understand and predict HPAI susceptibility. Some of the feedback we've received to date has questioned why we did not use ecological traits, like habitat, diet, and tendency to congregate, to model HPAI notifications. Below, we outline why using ecological traits may be confounding, and why family very adequately accounts for much ecological information on the various species.  
+
+The heatmap below shows total number of HPAI notifications in birds with different diet and habitats, separated by whether they congregate or not. The numbers inside the tiles will update automatically when a family is chosen. When "All" is selected, it shows the total number of species that fit that description. When one of the key families is selected, it will show the proportion of species in that category that are part of the selected family. Furthermore, when a family is selected, the heatmap will update to show total number of notifications for that family.  
+
+The aim of this is to show that broad categorisations like "freshwater" or "predator" are not insightful by themselves - they interact with other categories. For example, it is only congregating freshwater birds with plant-based diets that have many HPAI notifications. By selecting different families, it should become clear how Family, as a taxonomic grouping, accounts for many such interactions - ducks disproportionately account for the freshwater birds with plant-based diets, for example. Hence, our approach of using family-level phylogeny accounts for considerable ecological information, and therefore provides a valid basis for our predictions of which Australian birds may be susceptible to HPAI.
+
+
+```{r, fig.width = 10, fig.height=6}
+
+# All
+H1t <- HPAI_withold %>% filter(CongregateTrue== "Y") %>% group_by(Habitat_Groupings, Diet_Groupings, Family) %>% 
+  summarise(TotalNotifications = sum(Outbreaks), n = n())
+H1nt <- HPAI_withold %>% filter(CongregateTrue== "N") %>% group_by(Habitat_Groupings, Diet_Groupings, Family) %>% 
+  summarise(TotalNotifications = sum(Outbreaks), n = n())
+AllCong <- HPAI_withold %>% filter(CongregateTrue== "Y") %>% group_by(Habitat_Groupings, Diet_Groupings) %>% 
+  summarise(TotalNotifications = sum(Outbreaks), n = n())
+AllNoCong <- HPAI_withold %>% filter(CongregateTrue== "N") %>% group_by(Habitat_Groupings, Diet_Groupings) %>% 
+  summarise(TotalNotifications = sum(Outbreaks), n = n())
+
+# Anatidae
+AnatidaeT <- H1t %>% mutate(prop = case_when(Family == "Anatidae" ~ "Yes", TRUE ~ "No"))
+AnatidaeT <- AnatidaeT  %>% group_by(Habitat_Groupings, Diet_Groupings) %>%
+summarise(tot2 = sum(TotalNotifications), prop2 = sum(TotalNotifications[prop == "Yes"])/((sum(TotalNotifications[prop == "Yes"])+sum(TotalNotifications[prop == "No"]))), tot3 = sum(TotalNotifications[prop == "Yes"]))
+AnatidaeT$prop2 <- format(round(AnatidaeT$prop2, 2),nsmall = 2)
+
+AnatidaeNT <- H1nt %>% mutate(prop = case_when(Family == "Anatidae" ~ "Yes", TRUE ~ "No"))
+AnatidaeNT <- AnatidaeNT  %>% group_by(Habitat_Groupings, Diet_Groupings) %>%
+summarise(tot2 = sum(TotalNotifications), prop2 = sum(TotalNotifications[prop == "Yes"])/((sum(TotalNotifications[prop == "Yes"])+sum(TotalNotifications[prop == "No"]))), tot3 = sum(TotalNotifications[prop == "Yes"]))
+AnatidaeNT$prop2 <- format(round(AnatidaeNT$prop2, 2),nsmall = 2)
+
+# Laridae
+LaridaeT <- H1t %>% mutate(prop = case_when(Family == "Laridae" ~ "Yes", TRUE ~ "No"))
+LaridaeT <- LaridaeT  %>% group_by(Habitat_Groupings, Diet_Groupings) %>%
+summarise(tot2 = sum(TotalNotifications), prop2 = sum(TotalNotifications[prop == "Yes"])/((sum(TotalNotifications[prop == "Yes"])+sum(TotalNotifications[prop == "No"]))), tot3 = sum(TotalNotifications[prop == "Yes"]))
+LaridaeT$prop2 <- format(round(LaridaeT$prop2, 2),nsmall = 2)
+
+LaridaeNT <- H1nt %>% mutate(prop = case_when(Family == "Laridae" ~ "Yes", TRUE ~ "No"))
+LaridaeNT <- LaridaeNT  %>% group_by(Habitat_Groupings, Diet_Groupings) %>%
+summarise(tot2 = sum(TotalNotifications), prop2 = sum(TotalNotifications[prop == "Yes"])/((sum(TotalNotifications[prop == "Yes"])+sum(TotalNotifications[prop == "No"]))), tot3 = sum(TotalNotifications[prop == "Yes"]))
+LaridaeNT$prop2 <- format(round(LaridaeNT$prop2, 2),nsmall = 2)
+
+# Sulidae
+SulidaeT <- H1t %>% mutate(prop = case_when(Family == "Sulidae" ~ "Yes", TRUE ~ "No"))
+SulidaeT <- SulidaeT  %>% group_by(Habitat_Groupings, Diet_Groupings) %>%
+summarise(tot2 = sum(TotalNotifications), prop2 = sum(TotalNotifications[prop == "Yes"])/((sum(TotalNotifications[prop == "Yes"])+sum(TotalNotifications[prop == "No"]))), tot3 = sum(TotalNotifications[prop == "Yes"]))
+SulidaeT$prop2 <- format(round(SulidaeT$prop2, 2),nsmall = 2)
+
+SulidaeNT <- H1nt %>% mutate(prop = case_when(Family == "Sulidae" ~ "Yes", TRUE ~ "No"))
+SulidaeNT <- SulidaeNT  %>% group_by(Habitat_Groupings, Diet_Groupings) %>%
+summarise(tot2 = sum(TotalNotifications), prop2 = sum(TotalNotifications[prop == "Yes"])/((sum(TotalNotifications[prop == "Yes"])+sum(TotalNotifications[prop == "No"]))), tot3 = sum(TotalNotifications[prop == "Yes"]))
+SulidaeNT$prop2 <- format(round(SulidaeNT$prop2, 2),nsmall = 2)
+
+# Accipitridae
+AccipitridaeT <- H1t %>% mutate(prop = case_when(Family == "Accipitridae" ~ "Yes", TRUE ~ "No"))
+AccipitridaeT <- AccipitridaeT  %>% group_by(Habitat_Groupings, Diet_Groupings) %>%
+summarise(tot2 = sum(TotalNotifications), prop2 = sum(TotalNotifications[prop == "Yes"])/((sum(TotalNotifications[prop == "Yes"])+sum(TotalNotifications[prop == "No"]))), tot3 = sum(TotalNotifications[prop == "Yes"]))
+AccipitridaeT$prop2 <- format(round(AccipitridaeT$prop2, 2),nsmall = 2)
+
+AccipitridaeNT <- H1nt %>% mutate(prop = case_when(Family == "Accipitridae" ~ "Yes", TRUE ~ "No"))
+AccipitridaeNT <- AccipitridaeNT  %>% group_by(Habitat_Groupings, Diet_Groupings) %>%
+summarise(tot2 = sum(TotalNotifications), prop2 = sum(TotalNotifications[prop == "Yes"])/((sum(TotalNotifications[prop == "Yes"])+sum(TotalNotifications[prop == "No"]))), tot3 = sum(TotalNotifications[prop == "Yes"]))
+AccipitridaeNT$prop2 <- format(round(AccipitridaeNT$prop2, 2),nsmall = 2)
+
+# Congregating birds
+p <- plot_ly(
+  data = AllCong,
+  x = ~Habitat_Groupings,
+  y = ~Diet_Groupings,
+  z = ~TotalNotifications,  # Initial data (z1)
+  type = "heatmap",
+  zauto = FALSE,
+  zmin = 0,
+  zmax = 2000,
+  text = ~n,  # Initial labels (text_labels1)
+  hoverinfo = 'z+text',
+  colors = colorRamp(c("blue","red")),
+  texttemplate = "%{text}",  # Display the text in the center of each tile
+  textfont = list(color = "white", size = 18),  # Customize font color and size
+  showscale = TRUE
+) %>%
+  layout(
+    title = "Congregating birds",
+    xaxis = list(title = "Habitat groupings"),
+    yaxis = list(title = "Diet groupings"),
+    coloraxis = list(
+      colorbar = list(
+        title = "Total outbreaks",  # Change the legend title here
+        tickvals = seq(1, 2000, 500),
+        ticktext = c("500", "1000", "1500", "2000"))),
+    updatemenus = list(
+      list(
+        type = 'buttons',
+        buttons = list(
+          list(
+            method = "restyle",
+            args = list(list(x = list(AllCong$Habitat_Groupings), y = list(AllCong$Diet_Groupings), z = list(AllCong$TotalNotifications), text = list(AllCong$n))),
+            label = "All"
+          ),
+          list(
+            method = "restyle",
+            args = list(list(x = list(AnatidaeT$Habitat_Groupings), y = list(AnatidaeT$Diet_Groupings), z = list(AnatidaeT$tot3), text = list(AnatidaeT$prop2))),
+            label = "Anatidae (ducks and geese)"
+          ),
+          list(
+            method = "restyle",
+            args = list(list(x = list(LaridaeT$Habitat_Groupings), y = list(LaridaeT$Diet_Groupings), z = list(LaridaeT$tot3), text = list(LaridaeT$prop2))),
+            label = "Laridae (gulls and terns)"
+          ),
+          list(
+            method = "restyle",
+            args = list(list(x = list(SulidaeT$Habitat_Groupings), y = list(SulidaeT$Diet_Groupings), z = list(SulidaeT$tot3), text = list(SulidaeT$prop2))),
+            label = "Sulidae (gannets and boobies)"
+          ),
+          list(
+            method = "restyle",
+            args = list(list(x = list(AccipitridaeT$Habitat_Groupings), y = list(AccipitridaeT$Diet_Groupings), z = list(AccipitridaeT$tot3), text = list(AccipitridaeT$prop2))),
+            label = "Accipitridae (eagles, kites, and goshawks)"
+          )
+        ),
+          x = -1,
+          y = 1,
+          xanchor = "left",
+          yanchor = "top"
+      )
+    )
+  )
+
+p
+
+# Non-Congregating birds
+np <- plot_ly(
+  data = AllNoCong,
+  x = ~Habitat_Groupings,
+  y = ~Diet_Groupings,
+  z = ~TotalNotifications,  # Initial data (z1)
+  type = "heatmap",
+  zauto = FALSE,
+  zmin = 0,
+  zmax = 2000,
+  text = ~n,  # Initial labels (text_labels1)
+  hoverinfo = 'z+text',
+  colors = colorRamp(c("blue","red")),
+  texttemplate = "%{text}",  # Display the text in the center of each tile
+  textfont = list(color = "white", size = 18),  # Customize font color and size
+  showscale = TRUE
+) %>%
+  layout(
+    title = "Non-congregating birds",
+    xaxis = list(title = "Habitat groupings"),
+    yaxis = list(title = "Diet groupings"),
+    coloraxis = list(
+      colorbar = list(
+        title = "Total outbreaks",  # Change the legend title here
+        tickvals = seq(1, 2000, 500),
+        ticktext = c("500", "1000", "1500", "2000"))),
+    updatemenus = list(
+      list(
+        type = 'buttons',
+        buttons = list(
+          list(
+            method = "restyle",
+            args = list(list(x = list(AllNoCong$Habitat_Groupings), y = list(AllNoCong$Diet_Groupings), z = list(AllNoCong$TotalNotifications), text = list(AllNoCong$n))),
+            label = "All"
+          ),
+          list(
+            method = "restyle",
+            args = list(list(x = list(AnatidaeNT$Habitat_Groupings), y = list(AnatidaeNT$Diet_Groupings), z = list(AnatidaeNT$tot3), text = list(AnatidaeNT$prop2))),
+            label = "Anatidae (ducks and geese)"
+          ),
+          list(
+            method = "restyle",
+            args = list(list(x = list(LaridaeNT$Habitat_Groupings), y = list(LaridaeNT$Diet_Groupings), z = list(LaridaeNT$tot3), text = list(LaridaeNT$prop2))),
+            label = "Laridae (gulls and terns)"
+          ),
+          list(
+            method = "restyle",
+            args = list(list(x = list(SulidaeNT$Habitat_Groupings), y = list(SulidaeNT$Diet_Groupings), z = list(SulidaeNT$tot3), text = list(SulidaeNT$prop2))),
+            label = "Sulidae (gannets and boobies)"
+          ),
+          list(
+            method = "restyle",
+            args = list(list(x = list(AccipitridaeNT$Habitat_Groupings), y = list(AccipitridaeNT$Diet_Groupings), z = list(AccipitridaeNT$tot3), text = list(AccipitridaeNT$prop2))),
+            label = "Accipitridae (eagles, kites, and goshawks)"
+          )
+        ),
+          x = -1,
+          y = 1,
+          xanchor = "left",
+          yanchor = "top"
+      )
+    )
+  )
+
+np
+
+```
+
+## Data comments and caveats
+
+The predictions in this document come with a number of caveats. The most obvious one is that the dataset we train our first model on contains *reported* outbreaks of avian influenza - that means there is likely some bias in which species are being tested, and where those species occur ([Klaassen and Wille 2023](https://doi.org/10.1038/s41559-023-02182-x)). We might therefore be underestimating outbreaks in rarer bird families or those that occur in more remote areas. 
+
+We also use the family-level phylogeny to infer species with similar ecological traits. This is very likely to be true- closely related species do tend to share similar habitats and traits. We explored other analyses to see if ecological traits could predict disease outbreaks, using trait databases like Avonet and EltonTraits, but found that they often had slightly arbitrary trait designations for species that we know share very similar ecologies. Therefore, we decided to not pursue this approach, and instead use family-level groupings to infer their ecological, behavioural and physiological traits.   
+
+

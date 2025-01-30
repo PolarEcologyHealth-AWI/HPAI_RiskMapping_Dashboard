@@ -18,6 +18,7 @@ library(ggpubr)
 library(sf)
 sf_use_s2(FALSE)
 library(stars)
+library(knitr)
 
 load("data/metadata.rda")
 load("data/distributions_small.rda")
@@ -227,8 +228,9 @@ ui <- fluidPage(
                #### Species at Risk ####
                {
                tabPanel("Species at Risk",
-                        # div(class = "outer"
-                        # )
+                      fluidRow(
+                        column(12, align="center", htmlOutput("SpeciesRisk")),
+                      )
                )
                },
                
@@ -809,6 +811,17 @@ server <- function(input, output) {
     
   })
   }
+  
+  ##########################
+  #### Species at Risk ####
+  ##########################
+  
+  output$SpeciesRisk <- renderUI({
+    tags$iframe(src="Australian-birds-at-risk-of-HPAI.html", width = "100%", height = 800, scrolling = 'auto', frameBorder = '0')
+  })
+  
+
+
 }
 
 
