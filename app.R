@@ -57,8 +57,9 @@ spPalette <- tibble(group = grps$GroupNew %>% unique(),
 #### UI ####
 ui <- fluidPage(
   div(class = "nav",
-      
+    
     tags$style(HTML(".navbar .navbar-header {float: left; }.navbar .navbar-nav {float: right;}.container {min-width: 950px}")),
+    
     tags$head(
       tags$link(rel = "stylesheet", type = "text/css", href = "styles.css")
     ),
@@ -738,13 +739,6 @@ server <- function(input, output) {
     } else "no selection"
     })
   
-  # output$sba <- renderText({
-  #   if(!is.null(input$AggrMap_shape_click$id)) {
-  #     sba_out <- birdAggr[[1]] %>% filter(RID==input$AggrMap_shape_click$id) %>% pull(sba)
-  #     ifelse(is.na(sba_out), "", sba_out)
-  #   } else "no selection"
-  # })
-  
   ### Maps  
   {
   cls  <- rev(paletteer_c("ggthemes::Red-Green Diverging", 6))
@@ -816,11 +810,11 @@ server <- function(input, output) {
   #### Species at Risk ####
   ##########################
   
+  {
   output$SpeciesRisk <- renderUI({
     tags$iframe(src="Australian-birds-at-risk-of-HPAI.html", width = "100%", height = 800, scrolling = 'auto', frameBorder = '0')
   })
-  
-
+  }
 
 }
 

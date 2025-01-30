@@ -6,25 +6,25 @@ output:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
-library(tidyverse)
-library(ggsignif)
-library(emmeans)
-library(viridis)
-library(brms)
-library(ape)
-library(phangorn)
-library(castor)
-library(ggtree)
-library(RColorBrewer)
-library(patchwork)
-library(kableExtra)
-library(DT)
-library(plotly)
-conWLAB <- read_csv("data/conWLAB.csv")
-prunedtree <- read.tree("data/prunedtree.tre")
-HPAI_withold <- read_csv("data/HPAI_withold.csv")
-FamPhyl.1 <- readRDS("data/FamPhyl1_Jan.rds")
+# knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+# library(tidyverse)
+# library(ggsignif)
+# library(emmeans)
+# library(viridis)
+# library(brms)
+# library(ape)
+# library(phangorn)
+# library(castor)
+# library(ggtree)
+# library(RColorBrewer)
+# library(patchwork)
+# library(kableExtra)
+# library(DT)
+# library(plotly)
+# conWLAB <- read_csv("data/conWLAB.csv")
+# prunedtree <- read.tree("data/prunedtree.tre")
+# HPAI_withold <- read_csv("data/HPAI_withold.csv")
+# FamPhyl.1 <- readRDS("data/FamPhyl1_Jan.rds")
 ```
 
 The aim of this document is to predict susceptibility of Australian birds to Highly Pathogenic Avian Influenza Clade 2.3.4.4b (hereon, HPAI). We do this using a phylogenetic modelling approach, where we apply a family-level phylogenetic model on the HPAI notifications from the current panzootic, to determine the phylogenetic signal in HPAI susceptibility. Outbreak data was retrieved from WAHIS (World Animal Health Information System) of the World Organisation for Animal Health (WOAH) on 06/01/2025. 
@@ -367,6 +367,4 @@ np
 
 The predictions in this document come with a number of caveats. The most obvious one is that the dataset we train our first model on contains *reported* outbreaks of avian influenza - that means there is likely some bias in which species are being tested, and where those species occur ([Klaassen and Wille 2023](https://doi.org/10.1038/s41559-023-02182-x)). We might therefore be underestimating outbreaks in rarer bird families or those that occur in more remote areas. 
 
-We also use the family-level phylogeny to infer species with similar ecological traits. This is very likely to be true- closely related species do tend to share similar habitats and traits. We explored other analyses to see if ecological traits could predict disease outbreaks, using trait databases like Avonet and EltonTraits, but found that they often had slightly arbitrary trait designations for species that we know share very similar ecologies. Therefore, we decided to not pursue this approach, and instead use family-level groupings to infer their ecological, behavioural and physiological traits.   
-
-
+We also use the family-level phylogeny to infer species with similar ecological traits. This is very likely to be true- closely related species do tend to share similar habitats and traits. We explored other analyses to see if ecological traits could predict disease outbreaks, using trait databases like Avonet and EltonTraits, but found that they often had slightly arbitrary trait designations for species that we know share very similar ecologies. Therefore, we decided to not pursue this approach, and instead use family-level groupings to infer their ecological, behavioural and physiological traits.
