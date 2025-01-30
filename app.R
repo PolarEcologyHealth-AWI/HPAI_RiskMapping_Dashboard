@@ -18,7 +18,6 @@ library(ggpubr)
 library(sf)
 sf_use_s2(FALSE)
 library(stars)
-library(knitr)
 
 load("data/metadata.rda")
 load("data/distributions_small.rda")
