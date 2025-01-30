@@ -804,7 +804,7 @@ server <- function(input, output) {
   
   {
   output$SpeciesRisk <- renderUI({
-    tags$iframe(src="Australian-birds-at-risk-of-HPAI.html", width = "100%", height = 800, scrolling = 'auto', frameBorder = '0')
+    tags$iframe(src="Australian-birds-at-risk-of-HPAI.html", style='width:90vw;height:80vh;', scrolling = 'yes', frameBorder = '1')
   })
   }
   
@@ -814,7 +814,7 @@ server <- function(input, output) {
   
   {
     output$Information <- renderUI({
-      tags$iframe(src="Information.html", width = "100%", height = 800, scrolling = 'auto', frameBorder = '0')
+      tags$iframe(src="Information.html", style='width:80vw;height:80vh;', scrolling = 'yes', frameBorder = '1')
     })
   }
 
