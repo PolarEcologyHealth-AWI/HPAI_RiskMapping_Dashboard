@@ -270,16 +270,8 @@ ui <- fluidPage(
                #### Further info #####
                {
                  tabPanel("Data information",
-                          div(class = "outer",
-                              br(),
-                              br(),
-                              br(),
-                              br(),
-                              fluidRow(
-                                column(1),
-                                column(10, includeHTML("www/Information.html")),
-                                column(1)
-                              )
+                          fluidRow(
+                            column(12, align="center", htmlOutput("Information")),
                           )
                  )
                },
@@ -814,6 +806,16 @@ server <- function(input, output) {
   output$SpeciesRisk <- renderUI({
     tags$iframe(src="Australian-birds-at-risk-of-HPAI.html", width = "100%", height = 800, scrolling = 'auto', frameBorder = '0')
   })
+  }
+  
+  #####################
+  #### Information ####
+  #####################
+  
+  {
+    output$Information <- renderUI({
+      tags$iframe(src="Information.html", width = "100%", height = 800, scrolling = 'auto', frameBorder = '0')
+    })
   }
 
 }
