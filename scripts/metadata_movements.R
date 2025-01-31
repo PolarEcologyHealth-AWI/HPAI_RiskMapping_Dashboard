@@ -4,9 +4,9 @@
 # library(stars)
 # library(spatstat)
 # library(RColorBrewer)
-# 
-### Flyway ###
-##############
+
+## Flyway ###
+#############
 # 
 # plot(rnaturalearthdata::coastline50 %>% st_as_sf() %>% st_shift_longitude() %>% st_geometry())
 # pts <- locator()
@@ -462,7 +462,7 @@ load("data/flagsDB.rda")
 #   mutate(allWeight = approx(range(Days), c(0.5, 40), Days)$y, .before = "geometry")
 # 
 # save(sf_tracks, file = "data/sf_tracks.rda")
-load("data/sf_tracks.rda")
+# load("data/sf_tracks.rda")
 
 
 #### Shearwaters
@@ -472,11 +472,17 @@ load("data/sf_tracks.rda")
 # 
 # 
 # sw_tracks <- lapply(1:nrow(fls), function(i) {
-#   read_csv(fls$path[i]) %>% suppressMessages() %>% st_as_sf(coords = c("Lon.mean", "Lat.mean"), crs = 4326) %>%
-#     mutate(Species = fls$species[i], ID = fls$id[i], Date = as.numeric(format(Time, "%j")), Type = NA, Days = NA, 
-#            Split = NA, Color = "black", Lon = st_coordinates(.)[,1], Lat = st_coordinates(.)[,2], spWeight = NA, allWeight = NA) %>%
-#     dplyr::select(names(sf_tracks))
+  # read_csv(fls$path[i]) %>% suppressMessages() %>% st_as_sf(coords = c("Lon.mean", "Lat.mean"), crs = 4326) %>%
+  #   mutate(Species = fls$species[i], ID = fls$id[i], Date = as.numeric(format(Time, "%j")), Type = NA, Days = NA,
+  #          Split = NA, Color = "black", Lon = st_coordinates(.)[,1], Lat = st_coordinates(.)[,2], spWeight = NA, allWeight = NA) %>%
+  #   dplyr::select(names(sf_tracks), Time)
 # }) %>% Reduce("rbind",.)
 # 
 # sf_tracks <- sf_tracks %>% bind_rows(sw_tracks)
 # save(sf_tracks, file = "data/sf_tracks.rda")
+# 
+# 
+# ggplot() +
+#   geom_sf(data = c, mapping = aes(color = Time))
+# 
+# load("data/sf_tracks.rda")

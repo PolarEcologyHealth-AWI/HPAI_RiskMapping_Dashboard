@@ -1,0 +1,25 @@
+---
+output: html_document
+---
+
+<style type="text/css">
+  body{
+  font-size: 14pt;
+}
+</style>
+
+The current panzootic of highly pathogenic avian influenza (HPAI) has now spread worldwide with the exception of Australia and New Zealand, and has had unprecedented impacts on wild animal populations as well as devastating impacts on the poultry industry (e.g. <a href="https://www.nature.com/articles/s41559-023-02182-x" target="_blank">Klaassen & Wille 2023</a>). Understanding the potential role of wild birds in introducing and spreading HPAI in Australia is an important aspect of preparedness and response planning for human health and industry, as well as for wildlife managers.
+The incursion risk of HPAI into Australia is determined by a combination of **tabs in dash board follow the order below**:
+
+*	Where HPAI is found across the globe: **HPAI Outbreaks**
+*	The routes taken by migratory birds that could take HPAI to Australia: **Bird migrations**
+
+The risk of establishment and a further spread of HPAI virus is next determined by:
+
+* Which bird species in Australia are particularly vulnerable to HPAI infection: **Species at Risk**
+* And where the large concentrations of these species reside in Australia: **Bird Aggregations**
+
+Background information on HPAI risk to Australia as well as on the data presented, including the possibility to further drill down in this information, are presented  in **Data information**
+
+<br>
+<center>![](logos_small_horizontal.png){width=80%}</center>

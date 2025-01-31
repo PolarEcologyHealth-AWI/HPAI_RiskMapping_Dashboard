@@ -71,16 +71,9 @@ ui <- fluidPage(
                #### Home #####
                {
                  tabPanel("Home",
-                          div(class = "outer",
-                              br(),
-                              br(),
-                              br(),
-                              fluidRow(
-                                column(1),
-                                column(10, includeHTML("www/Home.html")),
-                                column(1)
-                              )
-                          )
+                      fluidRow(
+                          column(12, align="center", htmlOutput("Home")),
+                      )
                  )
                },
                
@@ -114,7 +107,7 @@ ui <- fluidPage(
                
                #### Bird migrations ####
                {
-                 tabPanel("Bird migrations",
+                 tabPanel("Bird Migrations",
                           div(class="outer",
                               tags$head(includeCSS("styles.css")),
                               
@@ -245,19 +238,32 @@ ui <- fluidPage(
                          absolutePanel(id = "controls", class = "panel panel-default",
                                        top = 80, left = 30, width = 350, fixed = TRUE,
                                        draggable = FALSE, height = "auto",
+                                       conditionalPanel(
+                                         condition = "input.AggrMap_shape_click == null",
+                                         h5('Please wait for the map to load.'),
+                                         br(),
+                                         h5('Possible interaction:'),
+                                         h5('- zoom (in/out)'),
+                                         h5('- cell selection'),
+                                         h5('- special bird area information')
+                                       ),
                                        br(),
-                                       h4("Maximum count:"),
-                                       verbatimTextOutput("MaxCount"),
+                                       
                                        conditionalPanel(
                                          condition = "input.AggrMap_shape_click != null",
-                                         plotOutput("speciesPie", width = 330, height = 300),
-                                         hr(style = "border-top: 1px solid #74b9e1;"),
-                                         fluidRow(
-                                           column(8, materialSwitch("speciesDetail", "Details", status = "info", value = FALSE))
-                                         ),
+                                         h4("Maximum count:"),
+                                         verbatimTextOutput("MaxCount"),
                                          conditionalPanel(
-                                           condition = "input.speciesDetail",
-                                           plotOutput("speciesDetail", width = 330, height = 250)
+                                           condition = "input.AggrMap_shape_click != null",
+                                           plotOutput("speciesPie", width = 330, height = 300),
+                                           hr(style = "border-top: 1px solid #74b9e1;"),
+                                           fluidRow(
+                                             column(8, materialSwitch("speciesDetail", "Details", status = "info", value = FALSE))
+                                           ),
+                                           conditionalPanel(
+                                             condition = "input.speciesDetail",
+                                             plotOutput("speciesDetail", width = 330, height = 290)
+                                           )
                                          )
                                        )
                          )
@@ -268,7 +274,7 @@ ui <- fluidPage(
                
                #### Further info #####
                {
-                 tabPanel("Data information",
+                 tabPanel("Data Information",
                           fluidRow(
                             column(12, align="center", htmlOutput("Information")),
                           )
@@ -278,17 +284,9 @@ ui <- fluidPage(
                #### About #####
                {
                  tabPanel("About",
-                          div(class = "outer",
-                              br(),
-                              br(),
-                              br(),
-                              br(),
-                              fluidRow(
-                                column(1),
-                                column(10, includeHTML("www/About.html")),
-                                column(1)
-                              )
-                          )
+                    fluidRow(
+                      column(12, align="center", htmlOutput("About")),
+                    )
                  )
                }
                
@@ -299,6 +297,16 @@ ui <- fluidPage(
 
 #### Server ####
 server <- function(input, output) {
+  
+  ###############
+  #### Home ####
+  ###############
+  
+  {
+    output$Home <- renderUI({
+      tags$iframe(src="Home.html", style='width:80vw;height:80vh;', scrolling = 'yes', frameBorder = '0')
+    })
+  }
   
   ###################
   #### Outbreaks ####
@@ -353,7 +361,7 @@ server <- function(input, output) {
         }")
     )
     
-    observeEvent(input$nav, {
+    observeEvent(input$navbar, {
       leafletProxy("OutbreakMap", data = outbreakDB %>% filter(Year == input$hpai_month)) %>%
         addCircles(color = ~color, fillOpacity = 0.6, weight = 6)
     })
@@ -686,9 +694,17 @@ server <- function(input, output) {
   #### Bird aggregations ###
   ##########################
   
+  cellSelect <- reactive({
+    if(!is.null(input$AggrMap_shape_click$lat)) {
+      RID <- st_point(c(input$AggrMap_shape_click$lng, input$AggrMap_shape_click$lat)) %>%
+        st_sfc(crs = 4326) %>% st_intersection(birdAggr[[2]],.) %>% pull(RID) %>% suppressMessages() %>% suppressWarnings()
+      ifelse(length(RID)>0, RID, -100)
+    } else NULL
+  })
+  
   output$speciesPie <- renderPlot({
-    if(!is.null(input$AggrMap_shape_click$id)) {
-      tmp <- birdAggr[[1]] %>% filter(RID==input$AggrMap_shape_click$id)
+    if(cellSelect()>0) {
+      tmp <- birdAggr[[1]] %>% filter(RID==cellSelect())
     
       tmp %>% dplyr::select(spPalette$group) %>% pivot_longer(cols = everything()) %>%
         ggplot(., mapping = aes(x = "", y = value, fill = name)) +
@@ -707,9 +723,9 @@ server <- function(input, output) {
   })
   
   output$speciesDetail <- renderPlot({
-    if(!is.null(input$AggrMap_shape_click$id)) {
-      tmp <- birdAggr[[1]] %>% filter(RID==input$AggrMap_shape_click$id) %>% 
-        dplyr::select(-spPalette$group, -sba, -RID, -Max_of_Max, -SPECIES_COUNT) %>% 
+    if(cellSelect()>0) {
+      tmp <- birdAggr[[1]] %>% filter(RID==cellSelect()) %>% 
+        dplyr::select(-spPalette$group, -RID, -Max_of_Max, -SPECIES_COUNT) %>% 
         pivot_longer(cols = everything()) %>%
         filter(!is.na(value), value >0) %>%
         left_join(grps[,1:2], by = join_by("name"=="Group"))
@@ -723,10 +739,10 @@ server <- function(input, output) {
           theme(axis.text.y = element_text(size = 13))
     }
   })
-
+  
   output$MaxCount <- renderText({
-    if(!is.null(input$AggrMap_shape_click$id)) {
-      birdAggr[[1]] %>% filter(RID==input$AggrMap_shape_click$id) %>% pull(Max_of_Max)
+    if(cellSelect()>0) {
+      birdAggr[[1]] %>% filter(RID==cellSelect()) %>% pull(Max_of_Max)
     } else "no selection"
     })
   
@@ -746,41 +762,29 @@ server <- function(input, output) {
                        position = "topright") %>%
       setView(lng = 131, lat = -28, zoom = 5) %>%
       addGeoRaster(
-              birdAggr[[3]],
-              opacity = 0.6,
-              colorOptions = colorOptions(
-                breaks = brks,
-                palette = cls),
-              group = 'MaxZoom') %>%
-      addGeoRaster(
                 birdAggr[[4]],
                 opacity = 0.6,
                 colorOptions = colorOptions(
                   breaks = brks,
                   palette = cls),
                 group = 'MidZoom') %>%
-      addGeoRaster(
-                birdAggr[[5]],
-                opacity = 0.6,
-                colorOptions = colorOptions(
-                  breaks = brks,
-                  palette = cls),
-                group = 'MinZoom') %>%
       addPolygons(data = birdAggr[[2]],
-                  weight = 0,
-                  fillColor = "transparent",
+                  weight = 1,
+                  color = "grey40",
+                  fillColor = ~ Color,
+                  fillOpacity = 0.8,
                   layerId = ~ RID,
                   group = "MaxZoom") %>%
       addPolygons(data = sba,
                   color = "black", weight = 1,
                   fillColor = "grey50", fillOpacity = 0.2,
-                  layerId = ~ OBJECTID,
+                  # layerId = ~ OBJECTID,
                   label = lapply(labelText, htmltools::HTML),
                   labelOptions = labelOptions(noHide = F, direction = "top"),
                   group = "MaxZoom") %>%
       groupOptions("MaxZoom", zoomLevels = 7:20) %>%
-      groupOptions("MidZoom", zoomLevels = 5:6) %>%
-      groupOptions("MinZoom", zoomLevels = 1:4) %>%
+      groupOptions("MidZoom", zoomLevels = 1:6) %>%
+      # groupOptions("MinZoom", zoomLevels = 1:4) %>%
       addLegend("bottomright", 
                 colors = cls,
                 labels = c("1-100", "100-1,000", "1,000-5,000", "5,000-10,000", 
@@ -814,6 +818,16 @@ server <- function(input, output) {
   {
     output$Information <- renderUI({
       tags$iframe(src="Information.html", style='width:80vw;height:80vh;', scrolling = 'yes', frameBorder = '1')
+    })
+  }
+  
+  ###############
+  #### About ####
+  ###############
+  
+  {
+    output$About <- renderUI({
+      tags$iframe(src="About.html", style='width:80vw;height:80vh;', scrolling = 'yes', frameBorder = '0')
     })
   }
 

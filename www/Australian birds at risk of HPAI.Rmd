@@ -5,6 +5,12 @@ output:
   html_document:
 ---
 
+<style type="text/css">
+  body{
+  font-size: 13pt;
+}
+</style>
+
 ```{r setup, include=FALSE}
 # knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 # library(tidyverse)
@@ -35,7 +41,7 @@ Since HPAI susceptibility is likely importantly determined by the preferred envi
 
 ## Step one: modelling outbreak prevalence among avian families
 
-The first step in our analysis is to model the number of HPAI notifications of the current avian influenza panzootic to determine the phylogenetic signal. The HPAI notifications in our dataset are all since October 2021 and are all from outside of Australia, and have been reported to the WOAH-WAHIS database. While not all cases are confirmed to be HPAI clade 2.3.4.4b, this is most likely the case for the vast majority. The model includes a family-level phylogeny of affected birds, from [Kuhl et al. 2021](https://doi.org/10.1093/molbev/msaa191).
+The first step in our analysis is to model the number of HPAI notifications of the current avian influenza panzootic to determine the phylogenetic signal. The HPAI notifications in our dataset are all since October 2021 and are all from outside of Australia, and have been reported to the WOAH-WAHIS database. While not all cases are confirmed to be HPAI clade 2.3.4.4b, this is most likely the case for the vast majority. The model includes a family-level phylogeny of affected birds, from <a href="https://doi.org/10.1093/molbev/msaa191" target="_blank">Kuhl et al. 2021</a>.
 
 
 ```{r, fig.width=8, fig.height=8}
@@ -92,7 +98,7 @@ The model reports a statistically significant phylogenetic signal (on a scale of
 
 ## Step two: Predicting susceptibility to HPAI outbreaks in Australian species
 
-We used the above model to predict which Australian species are likely to be particularly susceptible to HPAI outbreaks, again using a family-level phylogeny. The list of Australian birds we used is the [BirdLife Working List of Australian Birds](https://birdata.birdlife.org.au/whats-in-a-name), which has been pruned to exclude rare vagrants and very uncommon non-native species. Susceptibility to HPAI outbreaks was expressed on a scale from 0-1. This score was based on the predicted number of HPAI notifications by the model outlined above, where 80 predicted notifications represented a susceptibility index of 1.  We deemed any species that had an estimated HPAI susceptibility index of 0.5 or more as being moderately susceptible, and 0.8 or more as being highly susceptible. 
+We used the above model to predict which Australian species are likely to be particularly susceptible to HPAI outbreaks, again using a family-level phylogeny. The list of Australian birds we used is the <a href="https://birdata.birdlife.org.au/whats-in-a-name" target="_blank">BirdLife Working List of Australian Birds</a>, which has been pruned to exclude rare vagrants and very uncommon non-native species. Susceptibility to HPAI outbreaks was expressed on a scale from 0-1. This score was based on the predicted number of HPAI notifications by the model outlined above, where 80 predicted notifications represented a susceptibility index of 1.  We deemed any species that had an estimated HPAI susceptibility index of 0.5 or more as being moderately susceptible, and 0.8 or more as being highly susceptible. 
 
 ```{r, fig.width=25, fig.height=25}
 fams <- unique(prunedtree$tip.label)
@@ -365,6 +371,6 @@ np
 
 ## Data comments and caveats
 
-The predictions in this document come with a number of caveats. The most obvious one is that the dataset we train our first model on contains *reported* outbreaks of avian influenza - that means there is likely some bias in which species are being tested, and where those species occur ([Klaassen and Wille 2023](https://doi.org/10.1038/s41559-023-02182-x)). We might therefore be underestimating outbreaks in rarer bird families or those that occur in more remote areas. 
+The predictions in this document come with a number of caveats. The most obvious one is that the dataset we train our first model on contains *reported* outbreaks of avian influenza - that means there is likely some bias in which species are being tested, and where those species occur (<a href="https://doi.org/10.1038/s41559-023-02182-x" target="_blank">Klaassen and Wille 2023</a>). We might therefore be underestimating outbreaks in rarer bird families or those that occur in more remote areas. 
 
 We also use the family-level phylogeny to infer species with similar ecological traits. This is very likely to be true- closely related species do tend to share similar habitats and traits. We explored other analyses to see if ecological traits could predict disease outbreaks, using trait databases like Avonet and EltonTraits, but found that they often had slightly arbitrary trait designations for species that we know share very similar ecologies. Therefore, we decided to not pursue this approach, and instead use family-level groupings to infer their ecological, behavioural and physiological traits.

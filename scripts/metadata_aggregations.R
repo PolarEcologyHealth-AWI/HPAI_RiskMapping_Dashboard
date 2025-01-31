@@ -5,10 +5,10 @@
 # library(leaflet)
 # library(leafem)
 # library(paletteer)
-# # 
+# #
 # # # load("data/sba.rda")
 # # # sba <- sba %>% st_transform(4326)
-# # # save(sba, file = "data/sba_trans.rda")
+# # save(sba, file = "data/sba_trans.rda")
 # load("data/sba_trans.rda")
 # 
 # grid <- read_sf("~/Downloads/ChrisPurnell_Latest/grid/5km_grid_v9.shp") %>% dplyr::select(TARGET_FID)
@@ -34,6 +34,10 @@
 # 
 # grid_large <- st_rasterize(densTab %>% dplyr::select(Max_of_Max) %>% st_transform(4326),
 #                             st_as_stars(st_bbox(grid %>% st_transform(4326)), nx = round(1662/6,0), ny = round(939/6,0), values = NA, crs = 4326))
+# 
+# grid_TARGET_FID <- st_rasterize(densTab %>% dplyr::select(TARGET_FID) %>% st_transform(4326),
+#                                 st_as_stars(st_bbox(grid %>% st_transform(4326)), nx = 1662, ny = 939, values = NA, crs = 4326))
+# 
 # 
 # # gridDens <- list(detail = grid_detail, grid_inner = grid_minimal, middle = grid_middle, grid_outer = grid_large)
 # # # # save(gridDens, file = "data/distributionsGrid.rda")
@@ -94,29 +98,25 @@
 # # # save(sba, file = "data/sba.rdata")
 # 
 # 
-# ## Cell data
+## Cell data
 # smAggrData <- data %>% dplyr::select('TARGET_FID', 'Max_of_Max', 'SPECIES COUNT', names(data)[-c(1:15)]) %>%
 #   setNames(c('TARGET_FID', 'Max_of_Max', 'SPECIES_COUNT', names(data)[-c(1:15)])) %>%
-#   filter(!is.na(SPECIES_COUNT)) %>%
-#   left_join(grid %>% st_centroid() %>% st_transform(4326) %>%
-#               mutate(lon = st_coordinates(.)[,1], lat = st_coordinates(.)[,2]) %>% st_drop_geometry(), by = "TARGET_FID") %>%
-#   mutate(sba = (sba %>% pull(SBIRD_AREA))[apply(st_intersects(st_as_sf(., coords = c("lon", "lat"), crs = 4326), sba %>% st_transform(4326), sparse = FALSE), 1, function(x) ifelse(any(x), which(x), NA))])
-# 
-# 
+#   filter(!is.na(SPECIES_COUNT))
+ 
 # ### Aggregate same cells
 # duplVec  <- as.factor(apply(smAggrData[,2:10], 1, paste, collapse = "-"))
 # aggrSplt <- split(smAggrData, duplVec)
-#  # table(sapply(aggrSplt, function(x) nrow(x)))
+# # table(sapply(aggrSplt, function(x) nrow(x)))
 # 
-# grid <- grid_minimal %>% mutate(FID = NA)
+# grid_TARGET_FID_sf <- grid_TARGET_FID %>% st_as_sf()
 # 
 # gr <- parallel::mclapply(aggrSplt, function(x) {
-#    st_rasterize(densTab %>% filter(TARGET_FID%in%x$TARGET_FID) %>% dplyr::select(TARGET_FID) %>% st_transform(4326), grid[2]) %>%
-#                 st_as_sf() %>% st_union() %>% st_as_sf() %>% bind_cols(x[1,-1])
-# }, mc.cores = 10) %>% Reduce("rbind",.)
+#   grid_TARGET_FID_sf %>% filter(TARGET_FID%in%x$TARGET_FID) %>% 
+#     st_union() %>% st_sf() %>% bind_cols(x[1,-1])
+# }, mc.cores = 5) %>% Reduce("rbind", .)
 # 
 # gr <- gr %>% mutate(RID = 1:nrow(gr))
-# # save(gr, file = "data/gr.rda")
+# save(gr, file = "data/gr.rda")
 # 
 # grps   <- readxl::read_xlsx("data/SpGroups.xlsx")
 # grpsSM <- gr %>% st_drop_geometry() %>%
@@ -127,13 +127,18 @@
 #       left_join(grps, by = "Group") %>% group_by(GroupNew) %>% summarise(Count = sum(Count, na.rm = T)) %>%
 #       pivot_wider(names_from = GroupNew, values_from = Count)
 #     },mc.cores = 6) %>% Reduce("rbind",.)
-#   ) %>% dplyr::select(c(RID, sba, Max_of_Max, SPECIES_COUNT, grps$GroupNew, grps$Group))
-# 
+#   ) %>% dplyr::select(c(RID, Max_of_Max, SPECIES_COUNT, grps$GroupNew, grps$Group))
+
 # grpsSM$sba <- unlist(parallel::mclapply(1:nrow(gr), function(x) {
 #   out <- sba$SBIRD_AREA[apply(gr[x,] %>% st_intersects(sba %>% st_transform(st_crs(gr)), sparse = FALSE), 1, which)]
 #   ifelse(length(out)==0, NA, out[1])
 #   }, mc.cores = 6))
 # 
-# birdAggr <- list(BirdSummary = grpsSM, GridCount = gr %>% dplyr::select(RID) %>% st_as_sf() %>% rename(geometry = x) %>% st_transform(4326),
-#                  grid_inner = grid_minimal, middle = grid_middle, grid_outer = grid_large)
+# cls  <- rev(paletteer_c("ggthemes::Red-Green Diverging", 6))
+# brks <- c(0, 100, 1000, 5000, 10000, 50000, 2000000) 
+# 
+# gr$Color <- cls[cut(gr$Max_of_Max, breaks = brks, labels = F)]
+# 
+# birdAggr <- list(BirdSummary = grpsSM, GridCount = gr %>% dplyr::select(RID, Max_of_Max, Color),
+# grid_inner = grid_minimal, middle = grid_middle, grid_outer = grid_large)
 # save(birdAggr, file = "data/birdAggr.rda")
