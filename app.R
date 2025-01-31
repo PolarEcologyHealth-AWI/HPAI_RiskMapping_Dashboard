@@ -66,6 +66,7 @@ ui <- fluidPage(
     navbarPage(theme = shinytheme("flatly"), 
                collapsible = TRUE, fluid = TRUE,
                id = "navbar",
+               windowTitle = "HPAI Dashboard",
                title = HTML('<a style="text-decoration:none;cursor:default;color:#FFFFFF;" class="active" href="#">High Pathogenicity Avian Influenza (HPAI) Risk for Australia</a>'), 
                 
                #### Home #####
