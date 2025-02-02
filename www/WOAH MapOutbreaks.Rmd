@@ -1,0 +1,56 @@
+---
+title: "Map Outbreaks in Poultry and Wild Birds since early 2005"
+author: "Marcel Klaassen"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    number_sections: false
+    code_folding: hide
+    toc: false
+    toc_float:
+      collapsed: true
+      smooth_scroll: true
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r initializing, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+load(file="data/WOAH_PI_Rdata")
+library(leaflet)
+library(htmltools)
+```
+
+# Map the HPAI incidences over time
+
+The sliders allow you to select a date ranges. You can also select a narrow range and move that range as a whole up and down the slider (e.g. using the date slider you can slide a time window so, you can look at how the HPAI epidemiology evolves across the landscape over time [i.e. a manual animation if you like]).
+
+In the map chocolate markers are for wild birds and blue for poultry.
+
+```{r map the outbreaks by is_wild, warning=FALSE, message=FALSE, error=FALSE, eval=TRUE}
+
+Is <- subset(PI, select=c("Dead","Species" ,"is_wild","Date","Longitude","Latitude","sero_sub_genotype_eng"))
+Is$H5 <- grepl("H5",Is$sero_sub_genotype_eng)
+Is <- Is[complete.cases(Is),]
+Is$markerCol <- ifelse(Is$is_wild,"chocolate","blue")
+xy <- crosstalk::SharedData$new(Is)
+pal <- colorFactor(
+  palette = 'Paired',
+  domain = Is$Order
+)
+
+#create a date slider
+crosstalk::filter_slider("Outbreak Date", "Outbreak Date", xy, ~as.Date(Date), width = "90%")
+
+#Create a checkbox filter for Order
+crosstalk::filter_checkbox("wild birds", "Wild birds", xy, ~is_wild, allLevels = FALSE,inline = TRUE)
+
+#Create a checkbox filter for H5
+crosstalk::filter_checkbox("confirmed H5", "Confirmed H5", xy, ~H5, allLevels = FALSE,inline = TRUE)
+
+leaflet::leaflet(data = xy, width = "100%") %>% addTiles %>% 
+  addCircleMarkers(radius=2, color= ~markerCol, label = ~htmlEscape(paste0(Date,"-",Species))) %>% 
+  addMeasure(position = "topright",primaryLengthUnit = "kilometers",primaryAreaUnit = "sqmeters",
+             activeColor = "#3D535D",completedColor = "#7D4479",localization = "en")
+
+```

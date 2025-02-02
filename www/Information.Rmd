@@ -1,0 +1,371 @@
+---
+date: "`r Sys.Date()`"
+output:  html_document
+---
+
+
+```{r setup, warning=FALSE, message=FALSE, echo=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+# library(raster)
+library(maps)
+# library(rgdal)
+library(sp) # used to create a SpatialPoint object
+library(readxl)
+library(lubridate)
+library(DT)
+library(ggplot2)
+library(crosstalk, warn.conflicts = FALSE, quietly=TRUE)
+library(leaflet, warn.conflicts = FALSE, quietly=TRUE)
+library(htmltools, warn.conflicts = FALSE, quietly=TRUE)
+library(doBy)
+library(tidyverse) #for world map
+library(gganimate) #to animate ggplot
+library(gifski) #required for animation
+library(RColorBrewer)
+library(scales) #change labels along axis from scientific notation to "ordinary"
+library(rmarkdown)
+library(treemap)
+```
+
+```{r get Empres data, warning=FALSE, message=FALSE}
+#get OIE data
+# from https://oieoffice365.sharepoint.com/sites/PeriodicaldataextractionsOIE-WAHIS. 
+I <- read_excel("data/infur_20250113.xlsx", sheet="infur_20250113")
+B <- read_excel("data/BirdListI.xlsx")
+
+#correct a weird species
+I$Species[which(I$Species=="HieraaÃ«tus fasciatus")] <- "Hieraaetus fasciatus"
+
+#make farm & Zoo animals is_wild -> FALSE
+I$is_wild[which(I$Epi_unit %in% c("Farm","Zoo"))]<- FALSE
+
+#retain only avian influenza
+#unique(I$disease_eng)
+I <- I[which(I$disease_eng %in% c("Influenza A viruses of high pathogenicity (Inf. with) (non-poultry including wild birds) (2017-)", "High pathogenicity avian influenza viruses (poultry) (Inf. with)" )),]
+
+
+#how the number of cases, deads, susceptibls and killed_disposed have been recorded is a bit of a mess. 
+#We are here making a best guess of how many animals succumbed at each event.
+I$Dead <- NA
+I$Dead <- I$dead +I$killed_disposed
+I$Dead <- ifelse(is.na(I$Dead) | I$Dead==0, I$dead, I$Dead)
+I$Dead <- ifelse(is.na(I$Dead) | I$Dead==0, I$cases, I$Dead)
+I$Dead <- ifelse(is.na(I$Dead) | I$Dead==0, I$susceptible, I$Dead)
+I$Dead <- ifelse(is.na(I$Dead) | I$Dead==0, 1, I$Dead)
+
+
+#if observation date is missing take reporting date instead
+I$Date <- I$Outbreak_start_date
+I$Date[which(is.na(I$Date))] <- I$Reporting_date[which(is.na(I$Date))]
+
+#make some handy year and month variables
+I$Year <- year(I$Date)
+I$Month <- month(I$Date)
+I$Week <- week(I$Date)
+I$year <- I$Year+trunc((I$Month-1)/6)*0.5
+I$yearW <- I$Year+(I$Week-1)/52
+
+#only cases with a date
+I <- I[which(!is.na(I$Date)),]
+
+#make sure lats and longs are numeric
+I$Latitude <- as.numeric(I$Latitude)
+I$Longitude <- as.numeric(I$Longitude)
+
+SpeciesListI <- unique(I$Species)
+SpeciesListB <- unique(B$Species)
+I <- merge(I,B, by="Species", all.x=TRUE)
+
+#keep copy with both poultry and wild animals:
+PI <- I
+save(PI, file="data/WOAH_PI_Rdata")
+#make file with poultry
+P <- I[which(I$is_wild==FALSE),]
+#retain only wild animals
+I <- I[which(I$is_wild==TRUE),]
+
+#retain mammals
+M <- I[which(I$Class!="Aves"),]
+M$Species[which(M$Species=="Tursiops truncatus (fau)")] <- "Tursiops truncatus"
+
+#retain Aves
+I <- I[which(I$Class=="Aves"),]
+
+#check to see if there are any species missing from the species list
+if (length(setdiff(SpeciesListI,SpeciesListB))>0){
+  cat(paste0("\n Species list needs updating with: \n",setdiff(SpeciesListI,SpeciesListB), "\n"))
+}     
+
+#write.csv(setdiff(SpeciesListI,SpeciesListB), file="ToAddToBirdlist.csv")
+
+#change strain name
+#unique(I$strain_eng)
+I$strain_eng[which(I$strain_eng=="'-")] <- NA
+I$strain_eng[which(I$strain_eng=="Clade 2.3.4.4b - Lineage: Fully Eurasian")] <- "2.3.4.4b Eurasian"
+I$strain_eng[which(I$strain_eng=="Clade: 2.3.4.4b - Lineage: Reassortment Eurasian and North American")] <- "2.3.4.4b Eurasian x NA"
+
+```
+
+
+```{r getBirdSpeciesInfo}
+#get the species list
+SL <- read_excel("data/Multiling IOC 13.1_c.xlsx")
+SL$SciName <- SL$IOC_13.1
+SL <- subset(SL, select=c("Order","Family","SciName","English name"))
+
+
+#merge the two
+I <- merge(I,SL, by.x="AvesLatin", by.y="SciName", all.x=TRUE)
+
+I$Order[which(is.na(I$AvesLatin) | I$Class=="Mammalia")] <- toupper(I$order[which(is.na(I$AvesLatin) | I$Class=="Mammalia")]) #get order manual
+I$Family[which(is.na(I$AvesLatin) | I$Class=="Mammalia")] <- I$family[which(is.na(I$AvesLatin) | I$Class=="Mammalia")] #get family manual
+I$SpeciesOld <- NA
+I$SpeciesOld[which(!is.na(I$AvesLatin))] <- I$Species[which(!is.na(I$AvesLatin))] #get old scientific name
+
+I$EnglishName <- I$`English name`
+I$`English name` <- NULL
+I$order <- NULL
+I$family <- NULL
+I$Genus <- gsub(" .*$", "", I$AvesLatin)
+
+#PROBLEM <- I[which(I$Class=="Aves" & is.na(I$Order)),]
+
+#identify Australian Species
+Oz <- read.csv("AUS_output_sp_list_for_chris_v2.csv")
+OzCN <- unique(tolower(Oz$Common.Name))
+OzSN <- unique(Oz$TaxonScientificName)
+
+I$OzBird <- 0
+I$OzBird[which(I$AvesLatin %in% OzSN)] <- 1
+I$OzBird[which(I$SpeciesOld %in% OzSN)] <- 1
+I$OzBird[which(tolower(I$EnglishName) %in% OzCN)] <- 1
+
+
+```
+
+## Introduction
+
+Since the turn of the century high pathogenicity avian influenza (HPAI) viruses, have increasingly emerged along with the increase in global poultry production. This causes a major burden to the poultry industry, and more recently also wild birds, livestock and humans. The goose/guandong lineage HPAI H5N1 virus emerged in 1996 and has been circulating and evolving further for decades, current descendants of the virus belonging to clade 2.3.4.4b causing a global panzootic. Assisted by the movement of migratory birds, the virus has spread near-worldwide with the exception of Australia and New Zealand, and has had unprecedented impacts on wild animal populations as well as devastating impacts on the poultry industry. **Understanding the potential role of wild birds in introducing and spreading HPAI virus in Australia is an important aspect of preparedness and response planning for human health and industry, as well as for wildlife managers.** Wildlife Health Australia has therefore compiled a <a href="https://wildlifehealthaustralia.com.au/Portals/0/ResourceCentre/BiosecurityMgmt/HPAI_incursion_risk_assessment_Australia.pdf" target="_blank"> High Pathogenicity Avian Influenza (HPAI) clade 2.3.4.4b incursion risk assessment for Australia </a>. This document also includes information on the ecology and evolution of avian influenza and their avian hosts underpinning the risk assessment. Yet, the risk of a HPAI virus incursion to Australia, and of its subsequent establishment and spread, is fluid. The risk varies depending on where, when, and with what intensity HPAI virus is present in countries overseas and whether migratory birds can bring the virus from there to Australia. If an HPAI virus incursion into Australia occurs, establishment and further spread of the virus depends on where and when it arrives, and whether HPAI susceptible species are likely to present at that location in large numbers. To provide insights in these highly dynamic processes, we here bring together datasets on HPAI outbreaks, bird migrations, species at risk, and susceptible bird aggregations on our continent in a platform that will be updated whenever major developments in this space take place, so that stakeholders have all relevant information at hand in one place to be able to better evaluate the contemporary risk.
+
+
+## HPAI Outbreaks
+
+
+```{r render interactive map, echo=FALSE, message=FALSE, error=FALSE, results='hide'}
+
+## map identifying outbreaks in poultry and wild birds
+# I do thus via render, because the date scoll is messed up when doing it from within this Rmd
+# so, yet another bug in leaflet :-(
+render("WOAH MapOutbreaks.Rmd")
+
+```
+
+We collated an interactive, zoomable map, in {HPAI Outbreaks} showing locations of HPAI outbreaks using data from WAHIS (World Animal Health Information System) of the World Organisation for Animal Health (WOAH). The data presented includes all H5 and H7 HPAI outbreak events and need not necessarily represent outbreaks caused by HPAI H5N1 clade 2.3.4.4b virus (although since 2021, most of them are). The map allows to select outbreaks within a calendar year period. We also provide an alternative map <a href="https://vhost2009.hosted-sites.deakin.edu.au/HPAI/WOAH-MapOutbreaks.html" target="_blank">here</a>,  which presents HPAI outbreaks that need not necessarily relate to H5 and allows to select a datea range, identify confirmed H5 and H7 cases, and obtain more detailed information on each individual outbreak.
+
+
+**It should be noted that WOAH bears no responsibility for the integrity or accuracy of the data contained herein, but not limited to, any deletion, manipulation, or reformatting of data that may have occurred beyond its control. For some events, incorrect data have recently been detected. WOAH is currently undertaking considerable efforts to solve these issues at the source and provide a dataset that is fully consistent with that reported by countries. WOAH will keep its users informed as the situation develops.**
+
+
+In the interpretation of the data presented it should be borne in mind that countries may differ markedly in their level of screening and reporting of HPAI in poultry and wildlife.
+
+
+## Bird Migrations
+
+
+Migratory birds might potentially introduce HPAI virus from overseas sites where HPAI occurs. The <a href="https://wildlifehealthaustralia.com.au/Portals/0/ResourceCentre/BiosecurityMgmt/HPAI_incursion_risk_assessment_Australia.pdf" target="_blank"> High Pathogenicity Avian Influenza (HPAI) clade 2.3.4.4b incursion risk assessment for Australia </a> identifies all migrants from the northern hemisphere migrating to Australia as potential vehicles of HPAI virus dispersal. However, based on (Australian, non-breeding) population sizes and their known susceptibility to avian influenza infection <a href="https://royalsocietypublishing.org/doi/10.1098/rspb.2022.2237" target="_blank">(Wille et al. 2023)</a> as well as their suitability in representing specific migration routes and strategies, we have limited ourselves to a few representative shorebird and seabird species. Under **Bird Migrations**  we present an interactive map presenting the migratory routes and the timing of migrations for important shorebird and seabird species that migrate to and stay in Australia in the millions. 
+
+
+The map allows to depict resighting data of shorebirds with leg flags and other colour marks from <a href="http://www.birdmark.net" target="_blank">http://www.birdmark.net</a> collected by the Australasian Wader Studies Group, Global Flyway Network, Queensland Wader Study Group, and Victorian Wader Study Group. These shorebird leg-flag resightings allow for selecting displaying sighting per month, to illustrate the phenology of migration. Also tracking data from mainly shorebirds (for data sources see <a href="https://www.pnas.org/doi/10.1073/pnas.2311146121" target="_blank"> Lisovski et al. 2024</a>  and <a href="https://vwsg.org.au/waders/geolocator-studies/ruddy-turnstone/" target="_blank"> VWSG</a>) and two very common shearwaters (pers. comm. John Arnould, Deakin University) are presented in this map, presented in this map, again also providing information of when birds visit what locations within the East Asian Australasian Flyway. Also depicted are distribution maps from Birds of the World. Also depicted are distribution maps from Birds of the World (BirdLife International) for the various species of shorebirds for which banding and tracking data is presented.
+
+
+The phenology or timing of migrations is of great relevance relevance in this interactive map, highlighting that HPAI incursion risk is particularly high during the Austral Spring when migrants arrive from the northern hemisphere to Australia. 
+
+
+With increasing presence of HPAI in Antarctica and Antarctic waters, the movements of the short-tailed shearwater (Australia’s most common migratory seabird, by far) are of particular interest as they too move into these regions, regularly flying back and forth between Antarctic waters (they don’t make landfall on the Antarctic) and breeding colonies in Australia over the Austral Spring and Summer. 
+
+
+```{r get the species data since Oct 2021, warning=FALSE, message=FALSE}
+#Make a "table" of species x family x order and store it as a data frame
+I$Species <- I$AvesLatin
+
+S <- summaryBy(Dead ~ Species + SpeciesOld + EnglishName + Genus + Family + Order + Seabird + OzBird, data=I[which(I$Date>="2021-10-01"),], FUN=c(sum,length))
+S$Outbreaks <- S$Dead.length
+S$Casualties <- S$Dead.sum
+
+#sort by number of incidences
+S <- S[order(S$Dead.sum, decreasing=TRUE),]
+S$Dead.length <- NULL
+S$Dead.sum <- NULL
+
+#cat(paste0("Number of outbreaks: ",sum(S$Outbreaks), "\n"))
+#cat(paste0("Number of casualties: ",sum(S$Casualties), "\n"))
+
+#cat(paste0("Number of wild bird species involved: ", length(unique(I$Species[which(I$Date>="2021-10-01")]))-1,"\n")) #subtract -1 for NA
+#cat(paste0("Number of wild bird orders involved: ", length(unique(I$Order[which(I$Date>="2021-10-01")]))-1,"\n")) #subtract -1 for NA
+
+#cat(paste0("Number of wader species involved: ", length(unique(I$Species[which(I$Date>="2021-10-01" & I$Wader==1 )]))-1,"\n")) #subtract -1 for NA
+
+
+
+```
+
+## Species at Risk
+
+
+According to the WAHIS information system from WOAH there have been 
+`r sum(S$Outbreaks)` 
+ outbreaks or notifications of HPAI in wild birds involving 
+`r sum(S$Casualties)` 
+ casualties, across 
+`r length(unique(I$Order[which(I$Date>="2021-10-01")]))-1` 
+ orders and 
+`r length(unique(I$Species[which(I$Date>="2021-10-01")]))-1` 
+ species of birds, since the start of the pandemic (1 October 2021).  In the below table and figure, an overview is generated of these bird species and how these are distributed across the different orders and families of birds. As outlined in <a href="https://www.nature.com/articles/s41559-023-02182-x"target="_blank">Klaassen and Wille 2023</a>, these data provide only an indication of the number of birds that have fallen victim to HPAI virus, the true numbers likely being much larger and in the millions.
+
+
+```{r present the table and figure for wild birds}
+
+datatable(S,
+          extensions = 'Buttons', 
+          caption="Outbreaks (Dead.length) and casualties (Dead.sum) per species",
+          options = list(dom = 'Blfrtip', 
+                         buttons = c('copy', 'csv', 'excel', 'pdf', 'print')
+                         ))
+
+C <- summaryBy(Dead~Order+Family, 
+               data=I[which(I$Date>="2021-10-01"),],
+               FUN=c(sum,length))
+
+C$Notifications <- C$Dead.length
+C$Casualties <- C$Dead.sum
+
+#pdf(file="treemap1.pdf")
+treemap(C,
+            index=c("Order","Family"),
+            vSize="Notifications",
+            type="index",
+        fontsize.labels = c(15, 12), # size of labels. Give the size per level of aggregation: size for group, size for subgroup, sub-subgroups...
+    fontcolor.labels = c("white", "black"), # Color of labels
+    fontface.labels = c(2, 1), # Font of labels: 1,2,3,4 for normal, bold, italic, bold-italic...
+    bg.labels = c("transparent"), # Background color of labels
+    align.labels = list(
+        c("center", "center"),
+        c("right", "bottom")
+    ), # Where to place labels in the rectangle?
+    overlap.labels = 0.5, # number between 0 and 1 that determines the tolerance of the overlap between labels. 0 means that labels of lower levels are not printed if higher level labels overlap, 1  means that labels are always printed. In-between values, for instance the default value .5, means that lower level labels are printed if other labels do not overlap with more than .5  times their area size.
+    inflate.labels = F, # If true, labels are bigger when rectangle is bigger.
+    title.legend = "Orders",
+    position.legend = "none"
+            ) 
+#dev.off()
+
+```
+
+
+
+In **Species at Risk** we analysed these data to identify what Australian species are most at risk of infection with HPAI and therewith are most likely to fall victim to the virus, act as a reservoir for its maintenance, and assist in the spread of the virus.
+
+
+
+```{r get the wild mammal species data 2021 and next, warning=FALSE, message=FALSE}
+
+SM <- summaryBy(Dead ~ Species + order + family , data=M[which(M$Date>="2021-10-01"),], FUN=c(sum,length)) #wild mammals
+
+SM$Outbreaks <- SM$Dead.length
+SM$Casualties <- SM$Dead.sum
+
+#sort by number of incidences
+SM <- SM[order(SM$Dead.sum, decreasing=TRUE),]
+SM$Dead.length <- NULL
+SM$Dead.sum <- NULL
+
+
+#cat(paste0("Number of notifications wild mammals: ",sum(SM$Outbreaks), "\n"))
+#cat(paste0("Number of casualties: ",sum(SM$Casualties), "\n"))
+
+C <- summaryBy(Dead~order+family, 
+               data=M[which(M$Date>="2021-10-01"),],
+               FUN=c(sum,length))
+
+C$Notifications <- C$Dead.length
+C$Casualties <- C$Dead.sum
+
+```
+
+
+Increasingly, wild mammals are also affected by HPAI. According to the WAHIS information there have been 
+`r sum(SM$Outbreaks)`
+ outbreaks or notifications of HPAI in wild mammals involving 
+`r sum(SM$Casualties)` 
+ casualties, and 
+`r length(unique(M$Species[which(M$Date>="2021-10-01")]))-1` 
+ species of mammals. In the below table and figure, an overview is generated of these species and how these are distributed across the different orders and families of mammals. As can be seen, the vast majority of them are carnivorous, with the route of infection probably by eating infected moribund or dead victims to HPAI virus. While categorized as "wild" in the WOAH WAHIS database, some species (e.g. fox) are probably farmed animals.
+
+
+```{r present the mammal table and tree map}
+
+
+datatable(SM,
+          extensions = 'Buttons', caption="Mammals since 1 Oct 2021",
+          options = list(dom = 'Blfrtip', buttons = c('copy', 'csv', 'excel', 'pdf', 'print')))
+
+#pdf(file="treemap2.pdf")
+
+treemap(C,
+            index=c("order","family"),
+            vSize="Notifications",
+            type="index",
+        fontsize.labels = c(15, 12), # size of labels. Give the size per level of aggregation: size for group, size for subgroup, sub-subgroups...
+    fontcolor.labels = c("white", "black"), # Color of labels
+    fontface.labels = c(2, 1), # Font of labels: 1,2,3,4 for normal, bold, italic, bold-italic...
+    bg.labels = c("transparent"), # Background color of labels
+    align.labels = list(
+        c("center", "center"),
+        c("right", "bottom")
+    ), # Where to place labels in the rectangle?
+    overlap.labels = 0.5, # number between 0 and 1 that determines the tolerance of the overlap between labels. 0 means that labels of lower levels are not printed if higher level labels overlap, 1  means that labels are always printed. In-between values, for instance the default value .5, means that lower level labels are printed if other labels do not overlap with more than .5  times their area size.
+    inflate.labels = F, # If true, labels are bigger when rectangle is bigger.
+    title.legend = "Orders",
+    position.legend = "none")
+#dev.off()
+
+```
+
+
+## Bird Aggregations
+
+
+After a possible incursion of HPAI virus, the risk of establishment and a further spread of HPAI is not only determined by the **Species at Risk** of infection with HPAI but importantly also where the large concentrations of these species reside in Australia. The interactive **Bird Aggregations** map identifies known bird habitat and categorises it by overall abundance at scale, listing details on the composition of bird families represented and the accounts of known breeding colonies.
+
+
+Acknowledging the ecological traits, behaviours and associated habitat choice consistent with the **Species at Risk** that are most likely to maintain and spread HPAI, we focused on mapping sites of significance for waterbirds, shorebirds and seabirds (full list of families included below). 
+
+
+Five national databases were interrogated to identify sites of interest. The databases represent the best available information on habitat supporting migratory and resident shorebird, seabird and waterbird populations for the Australian mainland and offshore islands. Importantly it also includes information on known breeding colonies of resident shorebird, seabird and waterbirds. 
+
+
+Given the methods for data collection and spatial referencing vary between these databases it is difficult to reliably ascertain the true footprint of a particular population or habitat utilised. For example, a datapoint may represent a survey of birds in a 20,000ha wetland complex or a 20ha component of that complex. For this reason, a grid style data representation was employed. Each square in the map symbolises the maximum recorded bird abundance in a given 5km area in the last 25 years. This approach also allows representation of habitat at a scale relevant to management.
+
+
+For databases utilising independent identifiers for sites, data points were able to be aggregated at the 5km grid scale to determine an overall abundance. For databases with non-standardized site networks the maximum for each 5km grid cell was used. 
+
+
+Each grid cell in Australia was attributed the maximum abundance recorded from each of the five databases. The maximum of these numbers (100 - >50,000 individuals) was then represented on the map as one of six categories along a colour gradient. Where breeding colonies were identified, each neighbouring grid cell was ascribed the next lowest category to accommodate the colonies likely minimum foraging footprint beyond the 5km grid. 
+
+
+Survey information associated with the maximum count for each grid cell can be viewed by clicking the cell. This includes information on species diversity, whether a breeding colony has been identified and proportional composition of the overall bird abundance by family. It is important to note that this information doesn’t provide a complete list of species of interest recorded at the site but is a useful tool to identify the major groups present and thus threat mitigation and/or response measures to be considered. 
+
+
+For non-coastal wetlands, habitat utilisation/availability can be further scrutinised by utilising the abundance map in conjunction with dynamic wetland inundation mapping (for an overview of how dynamic water availability in the landscape is across Australia, please see <a href="https://vhost2009.hosted-sites.deakin.edu.au/HPAI/Waterbody.html" target="_blank">**here**</a>).
+
+
+```{r present table of aggregated species}
+
+TheList <- read_excel("data/Species in Bird Aggregations.xlsx")
+
+datatable(TheList,
+          extensions = 'Buttons', caption="List of families included in the Bird Aggregations overview",
+          options = list(dom = 'Blfrtip', buttons = c('copy', 'csv', 'excel', 'pdf', 'print')))
+
+```
+
