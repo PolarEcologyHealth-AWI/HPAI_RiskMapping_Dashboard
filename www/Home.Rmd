@@ -8,18 +8,62 @@ output: html_document
 }
 </style>
 
-The current panzootic of highly pathogenic avian influenza (HPAI) has now spread worldwide with the exception of Australia and New Zealand, and has had unprecedented impacts on wild animal populations as well as devastating impacts on the poultry industry (e.g. <a href="https://www.nature.com/articles/s41559-023-02182-x" target="_blank">Klaassen & Wille 2023</a>). Understanding the potential role of wild birds in introducing and spreading HPAI in Australia is an important aspect of preparedness and response planning for human health and industry, as well as for wildlife managers.
-The incursion risk of HPAI into Australia is determined by a combination of **tabs in dash board follow the order below**:
-
-*	Where HPAI is found across the globe: **HPAI Outbreaks**
-*	The routes taken by migratory birds that could take HPAI to Australia: **Bird Migrations**
-
-The risk of establishment and a further spread of HPAI virus is next determined by:
-
-* Which bird species in Australia are particularly vulnerable to HPAI infection: **Species at Risk**
-* And where the large concentrations of these species reside in Australia: **Bird Aggregations**
-
-Background information on HPAI risk to Australia as well as on the data presented, including the possibility to further drill down in this information, are presented  in **Data Information**
-
 <br>
 <center>![](logos_small_horizontal.png){width=80%}</center>
+
+<br />
+
+### AviFluMap: a H5 Bird Flu Wild Bird Model Tool for Australia
+
+<br />
+
+The dominant virus strain in the current panzootic of high pathogenicity avian influenza (HPAI) is *H5N1 clade 2.3.4.4b*. This strain (hereafter referred to as “*H5 bird flu*”) is belonging to a broader group of H5 HPAI strains with a common HPAI H5 ancestor first detected in China in 1996. It has now spread worldwide with the exception of Australia and New Zealand, and has had unprecedented impacts on wild animal populations as well as devastating impacts on the poultry industry (e.g. <a href="https://www.nature.com/articles/s41559-023-02182-x" target="_blank">Klaassen & Wille 2023</a>). 
+
+*AviFluMap*, a *H5 Bird Flu Wild Bird Model Tool for Australia* allows users to better understand the potential role of wild birds to introduce and spread H5 bird flu in Australia.  The understanding is an important aspect of preparedness and response planning for wildlife managers, government agencies (biosecurity, environment and public health), industry and others, and helps guide monitoring efforts and actions to mitigate potential impacts.
+
+Information about the global spread of HPAI virus via wild birds, and important considerations for risks to Australia, are presented in AviFluMap as follows: 
+
+
+* **About the Data**: instructions for tool navigation and important information about the data sets used in this tool, assumptions, limitations and data interrogation methodology. **IMPORTANT: To guide appropriate and effective use of** AviFluMap**, please visit this page first to read about the limitations and potential biases**.
+
+* **Global H5 HPAI Map**: map based on data from the World Organisation of Animal Health’s World Animal Health Information System (WAHIS). It shows H5 HPAI events notified to WOAH in domestic and wild birds for all strains of H5 HPAI including the current H5 bird flu strain across the globe since 2021. Data was last retrieved from WAHIS on 06/01/2025.
+
+* **Bird Migrations**: displays the routes taken by migratory birds that could bring HPAI, including H5 bird flu, to Australia.
+
+* **Species at Risk**: an assessment of which bird species are susceptible to H5 bird flu infection and subsequent sickness and death, based on H5 HPAI wild bird event data in WAHIS since October 2021. 
+
+* **Bird Aggregations**: a mapping tool demonstrating where key species at risk of H5 bird flu congregate within Australia. 
+
+* **About AviFluMap**
+
+
+<br />
+
+
+*NOTE: When the data used for AviFluMap is updated, the analysis may show revised results (such as new species at risk). Users should revisit the site regularly to access the latest information. Data will continue to be updated to AviFluMap, however at present the schedule for future updates has not yet been determined. WAHIS data was last updated on 06/01/2025 and bird aggregation data was last updated on 01/11/2024.*
+
+---
+
+<br />
+
+### Introduction to HPAI and the risk to Australia
+
+<br />
+
+
+Since the turn of the century H5 HPAI viruses have increasingly emerged along with the increase in global poultry production. This causes a major burden to the poultry industry, and more recently also wild birds, domestic and wild mammals and humans. The goose/guandong lineage of HPAI H5N1 emerged in 1996 and gave rise to the strain known as H5N1 clade 2.3.4.4b (H5 bird flu) currently causing a global panzootic (see <a href="https://wildlifehealthaustralia.com.au/Portals/0/Incidents/HPAI_Technical_Update.pdf" target="_blank">WHA Technical Issue Update</a>).
+
+Assisted by the movement of migratory birds, since 2021 H5 bird flu has spread near-worldwide with the exception of Australia and New Zealand, with unprecedented impacts on wild animal populations as well as devastating impacts on the poultry industry. Understanding the potential role of wild birds in introducing and spreading HPAI virus is an important aspect of preparedness and response planning for Australia. 
+
+Wildlife Health Australia has therefore compiled a <a href="https://wildlifehealthaustralia.com.au/Portals/0/ResourceCentre/BiosecurityMgmt/HPAI_incursion_risk_assessment_Australia.pdf" target="_blank">High Pathogenicity Avian Influenza (HPAI) clade 2.3.4.4b incursion risk assessment for Australia</a>. Note: **Risk refers to the likelihood of a H5 bird flu being introduced into Australia via wild birds as well as the consequences if it were to arrive**. If this specific virus reaches Australia, it will have significant impacts on our unique wildlife as well as our agricultural industries and national economy. Species that are important for First Nations peoples could also be at risk. Whilst the risk assessment includes information on the ecology and evolution of avian influenza and their avian hosts underpinning the risk assessment; the likelihood of a H5 bird flu incursion to Australia, and of its subsequent establishment and spread, is fluid. The AviFluMap tool allows users to better understand the potential role of wild birds to introduce and spread H5 bird flu in Australia based on global data.
+
+Several factors need to align for the virus to arrive in Australia via wild bird movements. The risk varies depending on where, when, and with what intensity HPAI virus is present in countries overseas and whether migratory birds can bring the virus from those locations to Australia. If H5 bird flu is absent (or circulating in low amounts) at these overseas locations, then migratory birds may not be exposed and infected before they set off for Australia. Any migratory bird that does get exposed and infected then needs to stay healthy enough to make the trip to Australia.
+
+If an H5 Bird flu virus incursion into Australia occurs, establishment and further spread depends on where and when it arrives, and whether susceptible species are likely to present at that location in large numbers and sufficient density to sustain ongoing transmission. To provide insights in these highly dynamic processes, this tool brings together datasets on H5 HPAI outbreaks (including H5 bird flu), bird migrations, species at risk, and susceptible bird aggregations on the Australian continent in a platform that will be updated as major developments in this space take place, thus enabling stakeholders to better evaluate the contemporary risk.
+
+---
+
+*We acknowledge the Traditional Owners of the Country on which we live and work, and we pay our respects to their Elders past and present. We recognise and are grateful for the immense contribution of Indigenous people to the knowledge and conservation of Australia’s birds.*
+
+
+
