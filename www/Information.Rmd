@@ -25,6 +25,8 @@ library(RColorBrewer)
 library(scales) #change labels along axis from scientific notation to "ordinary"
 library(rmarkdown)
 library(treemap)
+
+options(scipen=999)
 ```
 
 ```{r get Empres data, warning=FALSE, message=FALSE}
@@ -131,24 +133,28 @@ I$Genus <- gsub(" .*$", "", I$AvesLatin)
 #PROBLEM <- I[which(I$Class=="Aves" & is.na(I$Order)),]
 
 #identify Australian Species
-Oz <- read.csv("AUS_output_sp_list_for_chris_v2.csv")
+Oz <- read.csv("data/AUS_output_sp_list_for_chris_v2.csv")
 OzCN <- unique(tolower(Oz$Common.Name))
 OzSN <- unique(Oz$TaxonScientificName)
 
-I$OzBird <- 0
-I$OzBird[which(I$AvesLatin %in% OzSN)] <- 1
-I$OzBird[which(I$SpeciesOld %in% OzSN)] <- 1
-I$OzBird[which(tolower(I$EnglishName) %in% OzCN)] <- 1
+I$OzBird <- "No"
+I$OzBird[which(I$AvesLatin %in% OzSN)] <- "Yes"
+I$OzBird[which(I$SpeciesOld %in% OzSN)] <- "Yes"
+I$OzBird[which(tolower(I$EnglishName) %in% OzCN)] <- "Yes"
 
 
 ```
 
-## Introduction
 
-Since the turn of the century high pathogenicity avian influenza (HPAI) viruses, have increasingly emerged along with the increase in global poultry production. This causes a major burden to the poultry industry, and more recently also wild birds, livestock and humans. The goose/guandong lineage HPAI H5N1 virus emerged in 1996 and has been circulating and evolving further for decades, current descendants of the virus belonging to clade 2.3.4.4b causing a global panzootic. Assisted by the movement of migratory birds, the virus has spread near-worldwide with the exception of Australia and New Zealand, and has had unprecedented impacts on wild animal populations as well as devastating impacts on the poultry industry. **Understanding the potential role of wild birds in introducing and spreading HPAI virus in Australia is an important aspect of preparedness and response planning for human health and industry, as well as for wildlife managers.** Wildlife Health Australia has therefore compiled a <a href="https://wildlifehealthaustralia.com.au/Portals/0/ResourceCentre/BiosecurityMgmt/HPAI_incursion_risk_assessment_Australia.pdf" target="_blank"> High Pathogenicity Avian Influenza (HPAI) clade 2.3.4.4b incursion risk assessment for Australia </a>. This document also includes information on the ecology and evolution of avian influenza and their avian hosts underpinning the risk assessment. Yet, the risk of a HPAI virus incursion to Australia, and of its subsequent establishment and spread, is fluid. The risk varies depending on where, when, and with what intensity HPAI virus is present in countries overseas and whether migratory birds can bring the virus from there to Australia. If an HPAI virus incursion into Australia occurs, establishment and further spread of the virus depends on where and when it arrives, and whether HPAI susceptible species are likely to present at that location in large numbers. To provide insights in these highly dynamic processes, we here bring together datasets on HPAI outbreaks, bird migrations, species at risk, and susceptible bird aggregations on our continent in a platform that will be updated whenever major developments in this space take place, so that stakeholders have all relevant information at hand in one place to be able to better evaluate the contemporary risk.
+<br />
 
+This page provides guidance on how to navigate and use each page of AviFluMap. Importantly, it provides an overview of the data sets used in AviFluMap and details on the assumptions, limitations, potential biases, and methodologies applied during data analysis, as well as important caveats. 
 
-## HPAI Outbreaks
+<br />
+
+### About the Global H5 HPAI Map data
+
+<br />
 
 
 ```{r render interactive map, echo=FALSE, message=FALSE, error=FALSE, results='hide'}
@@ -160,37 +166,48 @@ render("WOAH MapOutbreaks.Rmd")
 
 ```
 
-We collated an interactive, zoomable map, in {HPAI Outbreaks} showing locations of HPAI outbreaks using data from WAHIS (World Animal Health Information System) of the World Organisation for Animal Health (WOAH). The data presented includes all H5 and H7 HPAI outbreak events and need not necessarily represent outbreaks caused by HPAI H5N1 clade 2.3.4.4b virus (although since 2021, most of them are). The map allows to select outbreaks within a calendar year period. We also provide an alternative map <a href="https://vhost2009.hosted-sites.deakin.edu.au/HPAI/WOAH-MapOutbreaks.html" target="_blank">here</a>,  which presents HPAI outbreaks that need not necessarily relate to H5 and allows to select a datea range, identify confirmed H5 and H7 cases, and obtain more detailed information on each individual outbreak.
+* The interactive, zoomable map shows the locations of H5 HPAI events involving domestic (including poultry) and wild birds as reported to the World Animal Health Information System (WAHIS) provided by World Organisation for Animal Health (WOAH). The map allows the user to select H5 HPAI events within a calendar year period. 
 
+* The map uses all H5 HPAI event data compiled in WAHIS since 2005. Since October 2021, the majority of H5 HPAI events captured in WAHIS relate to HPAI H5N1 clade 2.3.4.4b (H5 bird flu). Since it has not ben detected in Australia, all H5 HPAI events are from outside of Australia. 
 
-**It should be noted that WOAH bears no responsibility for the integrity or accuracy of the data contained herein, but not limited to, any deletion, manipulation, or reformatting of data that may have occurred beyond its control. For some events, incorrect data have recently been detected. WOAH is currently undertaking considerable efforts to solve these issues at the source and provide a dataset that is fully consistent with that reported by countries. WOAH will keep its users informed as the situation develops.**
+* H5 HPAI events in WAHIS can be searched and viewed <a href="https://wahis.woah.org/#/event-management" target="_blank">here</a>. 
 
+* An alternative map provided <a href="https://vhost2009.hosted-sites.deakin.edu.au/HPAI/WOAH-MapOutbreaks.html" target="_blank">here</a>, presents WAHIS H5 and H7 HPAI event data in both domestic and wild birds since 2005, and allows the user to select a date range, identify confirmed cases, and obtain more detailed information on individual outbreaks.
 
-In the interpretation of the data presented it should be borne in mind that countries may differ markedly in their level of screening and reporting of HPAI in poultry and wildlife.
+* Each event recorded in WAHIS provides the number of cases and deaths for each species; and may represent a single bird or multiple birds from a single or multiple species. 
 
+* Wild bird HPAI events reported to WAHIS include the following types of events: 1) Events in which H5 HPAI has been detected in environmental samples from the recorded wild bird species; 2) Events where H5 HPAI has been detected in the wild bird species but the bird had no obvious or reported clinical signs of sickness or death, and 3) events where H5 HPAI has been detected in sick and dead wild birds of the species reported. 
 
-## Bird Migrations
+* Because the majority (~98%) of H5 HPAI wild bird events in the WAHIS database since October 2021 report deaths for the species recorded, AviFluMap assumes that a species’ predicted susceptibility to infection is also closely linked to a species predicted likelihood of experiencing sickness and death (referred to as “Species at Risk”). 
 
+* When interpreting the data presented it should be noted that the WAHIS data relies on reporting by countries that may differ markedly in their level of screening and reporting of HPAI in domestic and wild birds. Species and geographic regions may be over-represented or under-represented in the WAHIS data depending on the event notification processes of the responsible country (<a href="https://www.nature.com/articles/s41559-023-02182-x" target="_blank">Klaassen & Wille 2023</a>). 
 
-Migratory birds might potentially introduce HPAI virus from overseas sites where HPAI occurs. The <a href="https://wildlifehealthaustralia.com.au/Portals/0/ResourceCentre/BiosecurityMgmt/HPAI_incursion_risk_assessment_Australia.pdf" target="_blank"> High Pathogenicity Avian Influenza (HPAI) clade 2.3.4.4b incursion risk assessment for Australia </a> identifies all migrants from the northern hemisphere migrating to Australia as potential vehicles of HPAI virus dispersal. However, based on (Australian, non-breeding) population sizes and their known susceptibility to avian influenza infection <a href="https://royalsocietypublishing.org/doi/10.1098/rspb.2022.2237" target="_blank">(Wille et al. 2023)</a> as well as their suitability in representing specific migration routes and strategies, we have limited ourselves to a few representative shorebird and seabird species. Under **Bird Migrations**  we present an interactive map presenting the migratory routes and the timing of migrations for important shorebird and seabird species that migrate to and stay in Australia in the millions. 
+* **Disclaimer from World Organisation for Animal Health (WOAH) World Animal Health Information System (WAHIS) from https://wahis.woah.org/#/home**: *Data extracted by Deakin University. WOAH bears no responsibility for the integrity or accuracy of the data contained herein, but not limited to, any deletion, manipulation, or reformatting of data that may have occurred beyond its control. For some events, incorrect data have recently been detected in the figures containing the quantitative information of the outbreaks. WOAH is currently undertaking considerable efforts to solve these issues at the source and provide a dataset that is fully consistent with that reported by countries. The remaining fields of the table are not impacted by these issues. We will keep our users informed as the situation develops.*
 
+<br />
 
-The map allows to depict resighting data of shorebirds with leg flags and other colour marks from <a href="http://www.birdmark.net" target="_blank">http://www.birdmark.net</a> collected by the Australasian Wader Studies Group, Global Flyway Network, Queensland Wader Study Group, and Victorian Wader Study Group. These shorebird leg-flag resightings allow for selecting displaying sighting per month, to illustrate the phenology of migration. Also tracking data from mainly shorebirds (for data sources see <a href="https://www.pnas.org/doi/10.1073/pnas.2311146121" target="_blank"> Lisovski et al. 2024</a>  and <a href="https://vwsg.org.au/waders/geolocator-studies/ruddy-turnstone/" target="_blank"> VWSG</a>) and two very common shearwaters (pers. comm. John Arnould, Deakin University) are presented in this map, presented in this map, again also providing information of when birds visit what locations within the East Asian Australasian Flyway. Also depicted are distribution maps from Birds of the World. Also depicted are distribution maps from Birds of the World (BirdLife International) for the various species of shorebirds for which banding and tracking data is presented.
+### About the Bird Migrations data
 
+<br />
 
-The phenology or timing of migrations is of great relevance relevance in this interactive map, highlighting that HPAI incursion risk is particularly high during the Austral Spring when migrants arrive from the northern hemisphere to Australia. 
+* Migratory birds might potentially introduce HPAI from overseas locations where HPAI is circulating in domestic or wild birds. The <a href="https://wildlifehealthaustralia.com.au/Portals/0/ResourceCentre/BiosecurityMgmt/HPAI_incursion_risk_assessment_Australia.pdf" target="_blank"> High Pathogenicity Avian Influenza (HPAI) clade 2.3.4.4b incursion risk assessment for Australia </a> identifies all shorebird and seabird migrants from the northern hemisphere that migrate to Australia as potential vehicles to introduce H5 bird flu to Australia. However, the data in this interactive map is limited to a few representative shorebird and seabird species, based on (Australian, non-breeding) wild bird population sizes, their known susceptibility to avian influenza infection (<a href="https://royalsocietypublishing.org/doi/10.1098/rspb.2022.2237" target="_blank">Wille et al. 2023</a>) and their suitability in representing specific migration routes and strategies. The interactive map presents the migratory routes and the timing of migrations for these important shorebird and seabird species that migrate to and stay in Australia in the millions.
 
+* The interactive map also depicts resighting data of shorebirds with leg flags and other colour marks from <a href="http://www.birdmark.net" target="_blank">www.birdmark.net</a> collected by the Australasian Wader Studies Group, Global Flyway Network, Queensland Wader Study Group, and Victorian Wader Study Group. The map allows users to select and display sightings per month, to illustrate the phenology (timing) of migration. In addition, tracking data from mainly shorebirds (for data sources see <a href="https://www.pnas.org/doi/10.1073/pnas.2311146121" target="_blank"> Lisovski et al. 2024</a>  and <a href="https://vwsg.org.au/waders/geolocator-studies/ruddy-turnstone/" target="_blank"> VWSG</a>) and two very common shearwaters (pers. comm. John Arnould, Deakin University) are incorporated, providing information on when these birds visit and from which locations within the East Asian Australasian Flyway. The interactive map also depicts distribution maps from Birds of the World (BirdLife International) for the various species of shorebirds for which banding and tracking data is presented.
 
-With increasing presence of HPAI in Antarctica and Antarctic waters, the movements of the short-tailed shearwater (Australia’s most common migratory seabird, by far) are of particular interest as they too move into these regions, regularly flying back and forth between Antarctic waters (they don’t make landfall on the Antarctic) and breeding colonies in Australia over the Austral Spring and Summer. 
+* The phenology or timing of migrations in this interactive map is of specific relevance, as this highlights that HPAI incursion risk is particularly high during the Austral Spring when migrants arrive from the northern hemisphere to Australia.
+
+* With increasing presence of HPAI in Antarctica and Antarctic waters, the movements of the short-tailed shearwater (Australia’s most common migratory seabird, by far) are of particular interest as they move regularly between Antarctic waters and breeding colonies in Australia over the Austral Spring and Summer.
+
 
 
 ```{r get the species data since Oct 2021, warning=FALSE, message=FALSE}
 #Make a "table" of species x family x order and store it as a data frame
 I$Species <- I$AvesLatin
 
-S <- summaryBy(Dead ~ Species + SpeciesOld + EnglishName + Genus + Family + Order + Seabird + OzBird, data=I[which(I$Date>="2021-10-01"),], FUN=c(sum,length))
+S <- summaryBy(Dead ~ Species + EnglishName + Family + Order + OzBird, data=I[which(I$Date>="2021-10-01"),], FUN=c(sum,length))
 S$Outbreaks <- S$Dead.length
 S$Casualties <- S$Dead.sum
+S$Species[which(is.na(S$Species))]<- "unknown"
 
 #sort by number of incidences
 S <- S[order(S$Dead.sum, decreasing=TRUE),]
@@ -209,25 +226,43 @@ S$Dead.sum <- NULL
 
 ```
 
-## Species at Risk
+<br />
+
+### About the data used in the Species at Risk model
+
+<br />
+
+* The “Species at Risk” model uses family-level phylogeny to infer species with similar ecological, behavioural and physiological traits, and susceptibility to HPAI infection. Though the degree to which species within a family are susceptible to infection and sickness/death will vary, the modelling assumes that all species within a family will have the same level of susceptibility. 
+
+* As a precautionary approach, decisions on wildlife risk mitigation strategies should be based on an understanding of uncertainty and multiple lines of evidence (where available), especially when considering species for which there are currently low or no reported cases of H5 HPAI, and where the risk may be underpredicted.
+
+* The “Species at Risk” model uses all wild bird H5 HPAI event data in WAHIS since October 2021 (see *About the Global H5 HPAI Map data* above). 
+
+* Because the majority (~98%) of H5 HPAI wild bird events in the WAHIS database since October 2021 report deaths for the species recorded, AviFluMap assumes that a species’ predicted susceptibility to infection is also closely linked to a species predicted likelihood of experiencing sickness and death (referred to as “Species at Risk”). The “ Species at Risk” should not be used alone to predict a species population level impact. Additional information, such as a species ‘status, population size, a variety of site-specific and species-specific factors should be used to assess the potential for population-level impacts. It is important to note that the “Species at Risk” shown by AviFluMap does not consider the species’ existing population size, conservation status or other threatening processes.
+
+* To a lesser extent, AviFluMap may also identify species that are less likely to experience sickness and death but could still play a role in maintaining or spreading the virus as reservoirs or carriers. Therefore, in any infection scenario, the reservoir species, species that disperse the virus and species that experience sickness or death (individually or at the population level) are not necessarily the same.
 
 
-According to the WAHIS information system from WOAH there have been 
+* Based on the events in WAHIS, there have been
 `r sum(S$Outbreaks)` 
- outbreaks or notifications of HPAI in wild birds involving 
+ events relating to H5 HPAI in wild birds, involving 
 `r sum(S$Casualties)` 
- casualties, across 
+individuals, across 
 `r length(unique(I$Order[which(I$Date>="2021-10-01")]))-1` 
  orders and 
 `r length(unique(I$Species[which(I$Date>="2021-10-01")]))-1` 
- species of birds, since the start of the pandemic (1 October 2021).  In the below table and figure, an overview is generated of these bird species and how these are distributed across the different orders and families of birds. As outlined in <a href="https://www.nature.com/articles/s41559-023-02182-x"target="_blank">Klaassen and Wille 2023</a>, these data provide only an indication of the number of birds that have fallen victim to HPAI virus, the true numbers likely being much larger and in the millions.
+ species of birds, since the start of the panzootic (1 October 2021).  In the below table and figure, an overview is generated of these bird species, whether these also occur in Australia, and how these are distributed across the different orders and families of birds. As outlined in <a href="https://www.nature.com/articles/s41559-023-02182-x"target="_blank">Klaassen and Wille (2023)</a>, these data only provide an indication of the number of birds that have been infected with H5 HPAI and subsequently died, the true numbers likely being much larger and in the millions.
+
+<br />
 
 
 ```{r present the table and figure for wild birds}
 
 datatable(S,
           extensions = 'Buttons', 
-          caption="Outbreaks (Dead.length) and casualties (Dead.sum) per species",
+          caption="Events and casualties per species for birds",
+          colnames=c("Scientific Name", "Common Name", "Family", "Order", "Occurs in Australia", "Events", "Casualties"),
+          rownames=FALSE,
           options = list(dom = 'Blfrtip', 
                          buttons = c('copy', 'csv', 'excel', 'pdf', 'print')
                          ))
@@ -262,14 +297,27 @@ treemap(C,
 ```
 
 
+<br />
 
-In **Species at Risk** we analysed these data to identify what Australian species are most at risk of infection with HPAI and therewith are most likely to fall victim to the virus, act as a reservoir for its maintenance, and assist in the spread of the virus.
+* Countries may differ markedly in their level of screening and reporting of HPAI in domestic and wild birds to WOAH. Species and geographic regions may be over-represented or under-represented in the WAHIS data set depending on the event notification processes of the responsible country (<a href="https://www.nature.com/articles/s41559-023-02182-x"target="_blank">Klaassen and Wille 2023</a>). As such, the predictive “Species at Risk” model for Australia may be less accurate in predicting susceptibility to infection in rarer bird families, those families endemic to Australia, or those that occur in regions of the world where reporting of wild bird events is less structured. 
 
+* **Disclaimer from World Organisation for Animal Health (WOAH) World Animal Health Information System (WAHIS) from https://wahis.woah.org/#/home**: *Data extracted by Deakin University. WOAH bears no responsibility for the integrity or accuracy of the data contained herein, but not limited to, any deletion, manipulation, or reformatting of data that may have occurred beyond its control. For some events, incorrect data have recently been detected in the figures containing the quantitative information of the outbreaks. WOAH is currently undertaking considerable efforts to solve these issues at the source and provide a dataset that is fully consistent with that reported by countries. The remaining fields of the table are not impacted by these issues. We will keep our users informed as the situation develops.*
+
+
+<br />
+
+### About the Species at Risk model
+
+<br />
+
+* The “Species at Risk” model uses family-level phylogeny to infer species with similar ecological traits. This modelling approach was taken because closely related species do tend to share similar habitats and traits, and because the existing trait databases were limiting. For instance, a model using ecological traits was explored to predict HPAI susceptibility (to infection and subsequent sickness and death), using databases such as <a href="https://opentraits.org/datasets/avonet.html"target="_blank">Avonet</a> and <a href="https://opentraits.org/datasets/elton-traits.html"target="_blank">Elton Traits</a>. However, results were inconsistent for many species which share very similar ecologies, due to the allocation of traits in those databases. Therefore, this approach was not pursued, and instead the model uses family-level groupings to infer their ecological, behavioural and physiological traits. Though the degree to which species within a family are susceptible to infection and sickness/death does vary, the modelling assumes that all species within a family will have the same level of susceptibility. 
+
+* Predictions of susceptibility may change as more data becomes available. Therefore, the susceptibility index in the “Species at Risk” model should be used as an indicator of HPAI susceptible families. As with any empirical modelling, the predictions are likely more accurate for the families that are well represented in the data (such as Sulidae and Laridae) than the ones with little or no data (such as Anhingidae).
 
 
 ```{r get the wild mammal species data 2021 and next, warning=FALSE, message=FALSE}
 
-SM <- summaryBy(Dead ~ Species + order + family , data=M[which(M$Date>="2021-10-01"),], FUN=c(sum,length)) #wild mammals
+SM <- summaryBy(Dead ~ Species + family + order , data=M[which(M$Date>="2021-10-01"),], FUN=c(sum,length)) #wild mammals
 
 SM$Outbreaks <- SM$Dead.length
 SM$Casualties <- SM$Dead.sum
@@ -292,21 +340,23 @@ C$Casualties <- C$Dead.sum
 
 ```
 
-
-Increasingly, wild mammals are also affected by HPAI. According to the WAHIS information there have been 
+* Increasingly, wild mammals are also affected by H5 HPAI, specifically HPAI H5N1 clade 2.3.4.4b virus. According to WAHIS data there have been 
 `r sum(SM$Outbreaks)`
- outbreaks or notifications of HPAI in wild mammals involving 
+events of H5 HPAI in wild mammals involving 
 `r sum(SM$Casualties)` 
  casualties, and 
 `r length(unique(M$Species[which(M$Date>="2021-10-01")]))-1` 
- species of mammals. In the below table and figure, an overview is generated of these species and how these are distributed across the different orders and families of mammals. As can be seen, the vast majority of them are carnivorous, with the route of infection probably by eating infected moribund or dead victims to HPAI virus. While categorized as "wild" in the WOAH WAHIS database, some species (e.g. fox) are probably farmed animals.
+species of mammals. The table and figure below provide an overview of these species and how these are distributed across the different orders and families of mammals. The vast majority of mammals are carnivorous, with the route of infection probably by eating sick or dead birds infected with H5 HPAI. While categorized as “wild” in the WAHIS database, some species (e.g. fox) may represent farmed animals.
 
+<br />
 
 ```{r present the mammal table and tree map}
 
 
 datatable(SM,
-          extensions = 'Buttons', caption="Mammals since 1 Oct 2021",
+          extensions = 'Buttons', caption="Events and casualties per species for mammals since 1 Oct 2021",
+          colnames=c("Scientific Name", "Family", "Order", "Events", "Casualties"),
+          rownames=FALSE,
           options = list(dom = 'Blfrtip', buttons = c('copy', 'csv', 'excel', 'pdf', 'print')))
 
 #pdf(file="treemap2.pdf")
@@ -332,32 +382,34 @@ treemap(C,
 ```
 
 
-## Bird Aggregations
 
+<br />
 
-After a possible incursion of HPAI virus, the risk of establishment and a further spread of HPAI is not only determined by the **Species at Risk** of infection with HPAI but importantly also where the large concentrations of these species reside in Australia. The interactive **Bird Aggregations** map identifies known bird habitat and categorises it by overall abundance at scale, listing details on the composition of bird families represented and the accounts of known breeding colonies.
+### About the Bird Aggregations data
 
+<br />
 
-Acknowledging the ecological traits, behaviours and associated habitat choice consistent with the **Species at Risk** that are most likely to maintain and spread HPAI, we focused on mapping sites of significance for waterbirds, shorebirds and seabirds (full list of families included below). 
+* After an incursion of H5 bird flu, the risk of establishment and a further spread of H5 bird flu is not only determined by the species susceptible to infection but importantly also where the large concentrations of these species reside in Australia. 
 
+* The interactive Bird Aggregations map identifies known bird habitat and categorises by overall abundance at scale, listing details on the composition of bird families represented and the accounts of known breeding colonies.
 
-Five national databases were interrogated to identify sites of interest. The databases represent the best available information on habitat supporting migratory and resident shorebird, seabird and waterbird populations for the Australian mainland and offshore islands. Importantly it also includes information on known breeding colonies of resident shorebird, seabird and waterbirds. 
+* Note – this is not a “live” map. Whilst it is known that species distribution and density change over time (seasonally and between years) this map is static.
 
+* Acknowledging the ecological traits, behaviours and associated habitat choice that are most likely to influence the maintenance and spread H5 bird flu, the map focuses on sites of significance for selected waterbirds, shorebirds and seabirds (full list of families included). Note that the families included in this list have been conservatively chosen, including some families that have relatively low HPAI susceptibility scores.
 
-Given the methods for data collection and spatial referencing vary between these databases it is difficult to reliably ascertain the true footprint of a particular population or habitat utilised. For example, a datapoint may represent a survey of birds in a 20,000ha wetland complex or a 20ha component of that complex. For this reason, a grid style data representation was employed. Each square in the map symbolises the maximum recorded bird abundance in a given 5km area in the last 25 years. This approach also allows representation of habitat at a scale relevant to management.
+* Five national databases were interrogated to identify sites of interest. The databases represent the best available information on habitat supporting migratory and resident shorebird, seabird and waterbird populations for the Australian mainland and offshore islands. Importantly they also include information on known breeding colonies of resident shorebird, seabird and waterbirds.
 
+* Given the methods for data collection and spatial referencing vary between these databases it is difficult to reliably ascertain the true footprint of a particular population or habitat utilised. For example, a datapoint may represent a survey of birds in a 20,000ha wetland complex or a 20ha component of that complex. For this reason, a grid style data representation was employed. Each square in the map symbolises the maximum recorded bird abundance in a given 5km area in the last 25 years. This approach also allows representation of habitat at a scale relevant to management.
 
-For databases utilising independent identifiers for sites, data points were able to be aggregated at the 5km grid scale to determine an overall abundance. For databases with non-standardized site networks the maximum for each 5km grid cell was used. 
+* For databases utilising independent identifiers for sites, data points were aggregated at the 5km grid scale to determine an overall abundance. For databases with non-standardized site networks the maximum for each 5km grid cell was used.
 
+* Each grid cell in Australia was attributed the maximum abundance recorded from each of the five databases. The maximum of these numbers (100 - >50,000 individuals) was then represented on the map as one of six categories along a colour gradient. Where breeding colonies were identified, each neighbouring grid cell was ascribed the next lowest category to accommodate the colonies likely minimum foraging footprint beyond the 5km grid.
 
-Each grid cell in Australia was attributed the maximum abundance recorded from each of the five databases. The maximum of these numbers (100 - >50,000 individuals) was then represented on the map as one of six categories along a colour gradient. Where breeding colonies were identified, each neighbouring grid cell was ascribed the next lowest category to accommodate the colonies likely minimum foraging footprint beyond the 5km grid. 
+* Survey information associated with the maximum count for each grid cell can be viewed by clicking the cell. This includes information on species diversity, whether a breeding colony has been identified and proportional composition of the overall bird abundance by family. It is important to note that this information doesn’t provide a complete list of species of interest recorded at the site but is a useful tool to identify the major groups present and thus threat mitigation and/or response measures to be considered.
 
+* For non-coastal wetlands, habitat utilisation/availability can be further scrutinised by utilising the abundance map in conjunction with dynamic wetland inundation mapping (for an overview of how dynamic water availability in the landscape is across Australia, please see <a href="https://vhost2009.hosted-sites.deakin.edu.au/HPAI/Waterbody.html" target="_blank">**here**</a>).
 
-Survey information associated with the maximum count for each grid cell can be viewed by clicking the cell. This includes information on species diversity, whether a breeding colony has been identified and proportional composition of the overall bird abundance by family. It is important to note that this information doesn’t provide a complete list of species of interest recorded at the site but is a useful tool to identify the major groups present and thus threat mitigation and/or response measures to be considered. 
-
-
-For non-coastal wetlands, habitat utilisation/availability can be further scrutinised by utilising the abundance map in conjunction with dynamic wetland inundation mapping (for an overview of how dynamic water availability in the landscape is across Australia, please see <a href="https://vhost2009.hosted-sites.deakin.edu.au/HPAI/Waterbody.html" target="_blank">**here**</a>).
-
+<br />
 
 ```{r present table of aggregated species}
 
@@ -365,6 +417,7 @@ TheList <- read_excel("data/Species in Bird Aggregations.xlsx")
 
 datatable(TheList,
           extensions = 'Buttons', caption="List of families included in the Bird Aggregations overview",
+          rownames=FALSE,
           options = list(dom = 'Blfrtip', buttons = c('copy', 'csv', 'excel', 'pdf', 'print')))
 
 ```

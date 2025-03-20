@@ -1,0 +1,47 @@
+---
+title: "Australian Species List"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+library(tidyverse)
+library(ggsignif)
+library(emmeans)
+library(viridis)
+#library(brms)
+library(ape)
+library(phangorn)
+library(castor)
+library(ggtree)
+library(RColorBrewer)
+library(patchwork)
+library(kableExtra)
+library(DT)
+library(plotly)
+#library(rredlist)
+conWLAB <- read_csv("data/conWLAB.csv")
+tip_resultsAus <- read_csv("data/tip_resultsAus.csv")
+RedList_State_EPBC_status <- read_csv("data/RedList_State_EPBC_status.csv")
+```
+
+<br />
+
+The table below presents the predicted HPAI susceptibility index for Australian species, excluding rare vagrants and very uncommon non-native species. While not used in calculating their HPAI susceptibility index (reminder: only phylogeny was used, see above and *About the Data*), a number of additional key ecological attributes thought important in determining species’ susceptibility to HPAI infection and potential impacts are provided for each Australian bird species in the table. The ecological traits include whether the species congregates in high numbers, whether the species breeds in colonies, and the species’ predominant habitat and diet. The list is currently ordered by families with the highest estimated outbreaks but can be ordered based on other columns by interacting with the column headings. The table can also be downloaded using a range of formats.
+
+<br />
+
+```{r, fig.width=20, fig.height=20}
+predicted <- conWLAB %>% 
+  left_join(tip_resultsAus, by = "Family")
+predicted_stat <- predicted %>% 
+  left_join(RedList_State_EPBC_status, by = c("Species" = "Scientific Name"))
+predicted_stat <- predicted_stat %>% arrange(desc(HPAISusceptibilityIndex))
+
+treedat <- predicted_stat %>% select(FamilyCommonName, FamilyScientificName, TaxonName, CongregateTrue, `Colony?`, Habitat_Groupings, Diet_Groupings, `IUCN Red List`, `EPBC Threat Status`, `ACT NC Act`, `NSW TSC Act and FM Act`, `NT TPWC Act`, `Qld NC Act`, `SA NPW Act`, `Tas. TSP Act`, `Vic. FFG Act (Advisory Lists)`, `WA WC Act`)
+
+treedat <- treedat %>% rename("Family" = "FamilyCommonName",
+                              "Species" = "TaxonName")
+datatable(treedat, colnames = c("Habitat" = "Habitat_Groupings", "Diet" = "Diet_Groupings", "Congregating bird?" = "CongregateTrue", "Colony breeder?" = "Colony?"), options = list(iDisplayLength = 25, dom = 'Blfrtip', buttons = c('copy', 'csv', 'excel', 'pdf')), extensions = 'Buttons') 
+```
+

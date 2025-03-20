@@ -1,0 +1,191 @@
+Species.ID,Common.Name,TaxonLevel,TaxonID,TaxonName,TaxonScientificName,FamilyCommonName,FamilyScientificName,Order
+130,Australian Pied Oystercatcher,sp,u130,Australian Pied Oystercatcher,Haematopus longirostris,Oystercatchers,Haematopodidae,Charadriiformes
+133,Masked Lapwing,sp,133,Masked Lapwing,Vanellus miles,"Plovers, Dotterel and Lapwings",Charadriidae,Charadriiformes
+146,Pied Stilt,sp,u146,Pied Stilt,Himantopus leucocephalus,Stilts and Avocets,Recurvirostridae,Charadriiformes
+148,Red-necked Avocet,sp,u148,Red-necked Avocet,Recurvirostra novaehollandiae,Stilts and Avocets,Recurvirostridae,Charadriiformes
+149,Far Eastern Curlew,sp,u149,Far Eastern Curlew,Numenius madagascariensis,"Snipe, Sandpipers, Godwits, Curlew, Stints and Phalaropes",Scolopacidae,Charadriiformes
+150,Whimbrel,sp,150,Whimbrel,Numenius phaeopus,"Snipe, Sandpipers, Godwits, Curlew, Stints and Phalaropes",Scolopacidae,Charadriiformes
+153,Bar-tailed Godwit,sp,153,Bar-tailed Godwit,Limosa lapponica,"Snipe, Sandpipers, Godwits, Curlew, Stints and Phalaropes",Scolopacidae,Charadriiformes
+163,Sharp-tailed Sandpiper,sp,u163,Sharp-tailed Sandpiper,Calidris acuminata,"Snipe, Sandpipers, Godwits, Curlew, Stints and Phalaropes",Scolopacidae,Charadriiformes
+179,Australian White Ibis,sp,179,Australian White Ibis,Threskiornis moluccus,Ibis and Spoonbills,Threskiornithidae,Pelecaniformes
+185,Little Egret,sp,185,Little Egret,Egretta garzetta,"Herons, Egrets and Bitterns",Ardeidae,Pelecaniformes
+188,White-faced Heron,sp,188,White-faced Heron,Egretta novaehollandiae,"Herons, Egrets and Bitterns",Ardeidae,Pelecaniformes
+137,Pacific Golden Plover,sp,u137,Pacific Golden Plover,Pluvialis fulva,"Plovers, Dotterel and Lapwings",Charadriidae,Charadriiformes
+99,Great Pied Cormorant,sp,99,Great Pied Cormorant,Phalacrocorax varius,Cormorants and Shags,Phalacrocoracidae,Pelecaniformes
+106,Australian Pelican,sp,u106,Australian Pelican,Pelecanus conspicillatus,Pelican,Pelecanidae,Pelecaniformes
+140,Double-banded Plover,sp,140,Double-banded Plover,Charadrius bicinctus,"Plovers, Dotterel and Lapwings",Charadriidae,Charadriiformes
+143,Red-capped Plover,sp,u143,Red-capped Plover,Charadrius ruficapillus,"Plovers, Dotterel and Lapwings",Charadriidae,Charadriiformes
+161,Curlew Sandpiper,sp,u161,Curlew Sandpiper,Calidris ferruginea,"Snipe, Sandpipers, Godwits, Curlew, Stints and Phalaropes",Scolopacidae,Charadriiformes
+162,Red-necked Stint,sp,u162,Red-necked Stint,Calidris ruficollis,"Snipe, Sandpipers, Godwits, Curlew, Stints and Phalaropes",Scolopacidae,Charadriiformes
+187,Great Egret,sp,187,Great Egret,Ardea alba,"Herons, Egrets and Bitterns",Ardeidae,Pelecaniformes
+208,Pacific Black Duck,sp,u208,Pacific Black Duck,Anas superciliosa,"Ducks, Geese and Swans",Anatidae,Anseriformes
+210,Chestnut Teal,sp,u210,Chestnut Teal,Anas castanea,"Ducks, Geese and Swans",Anatidae,Anseriformes
+211,Grey Teal,sp,u211,Grey Teal,Anas gracilis,"Ducks, Geese and Swans",Anatidae,Anseriformes
+217,Musk Duck,sp,217,Musk Duck,Biziura lobata,"Ducks, Geese and Swans",Anatidae,Anseriformes
+158,Common Greenshank,sp,u158,Common Greenshank,Tringa nebularia,"Snipe, Sandpipers, Godwits, Curlew, Stints and Phalaropes",Scolopacidae,Charadriiformes
+181,Royal Spoonbill,sp,u181,Royal Spoonbill,Platalea regia,Ibis and Spoonbills,Threskiornithidae,Pelecaniformes
+147,Banded Stilt,sp,u147,Banded Stilt,Cladorhynchus leucocephalus,Stilts and Avocets,Recurvirostridae,Charadriiformes
+166,Sanderling,sp,166,Sanderling,Calidris alba,"Snipe, Sandpipers, Godwits, Curlew, Stints and Phalaropes",Scolopacidae,Charadriiformes
+203,Black Swan,sp,u203,Black Swan,Cygnus atratus,"Ducks, Geese and Swans",Anatidae,Anseriformes
+97,Little Black Cormorant,sp,u97,Little Black Cormorant,Phalacrocorax sulcirostris,Cormorants and Shags,Phalacrocoracidae,Pelecaniformes
+100,Little Pied Cormorant,sp,100,Little Pied Cormorant,Microcarbo melanoleucos,Cormorants and Shags,Phalacrocoracidae,Pelecaniformes
+175,Beach Stone-curlew,sp,u175,Beach Stone-curlew,Esacus magnirostris,Stone-curlews,Burhinidae,Charadriiformes
+193,Striated Heron,sp,193,Striated Heron,Butorides striata,"Herons, Egrets and Bitterns",Ardeidae,Pelecaniformes
+96,Great Cormorant,sp,96,Great Cormorant,Phalacrocorax carbo,Cormorants and Shags,Phalacrocoracidae,Pelecaniformes
+202,Australian Wood Duck,sp,u202,Australian Wood Duck,Chenonetta jubata,"Ducks, Geese and Swans",Anatidae,Anseriformes
+101,Australasian Darter,sp,101,Australasian Darter,Anhinga novaehollandiae,Darter,Anhingidae,Pelecaniformes
+62,Hoary-headed Grebe,sp,u62,Hoary-headed Grebe,Poliocephalus poliocephalus,Grebes,Podicipedidae,Podicepiformes
+192,Nankeen Night-Heron,sp,192,Nankeen Night-Heron,Nycticorax caledonicus,"Herons, Egrets and Bitterns",Ardeidae,Pelecaniformes
+49,Australian Spotted Crake,sp,u49,Australian Spotted Crake,Porzana fluminea,"Crakes, Rails and Swamphens",Rallidae,Gruiformes
+132,Red-kneed Dotterel,sp,u132,Red-kneed Dotterel,Erythrogonys cinctus,"Plovers, Dotterel and Lapwings",Charadriidae,Charadriiformes
+152,Black-tailed Godwit,sp,152,Black-tailed Godwit,Limosa limosa,"Snipe, Sandpipers, Godwits, Curlew, Stints and Phalaropes",Scolopacidae,Charadriiformes
+54,Tasmanian Native-hen,sp,u54,Tasmanian Native-hen,Tribonyx mortierii,"Crakes, Rails and Swamphens",Rallidae,Gruiformes
+98,Black-faced Cormorant,sp,u98,Black-faced Cormorant,Phalacrocorax fuscescens,Cormorants and Shags,Phalacrocoracidae,Pelecaniformes
+129,Ruddy Turnstone,sp,129,Ruddy Turnstone,Arenaria interpres,"Snipe, Sandpipers, Godwits, Curlew, Stints and Phalaropes",Scolopacidae,Charadriiformes
+131,Sooty Oystercatcher,sp,131,Sooty Oystercatcher,Haematopus fuliginosus,Oystercatchers,Haematopodidae,Charadriiformes
+56,Dusky Moorhen,sp,56,Dusky Moorhen,Gallinula tenebrosa,"Crakes, Rails and Swamphens",Rallidae,Gruiformes
+58,Purple Swamphen,sp,58,Purple Swamphen,Porphyrio porphyrio,"Crakes, Rails and Swamphens",Rallidae,Gruiformes
+144,Black-fronted Dotterel,sp,u144,Black-fronted Dotterel,Elseyornis melanops,"Plovers, Dotterel and Lapwings",Charadriidae,Charadriiformes
+61,Australasian Grebe,sp,61,Australasian Grebe,Tachybaptus novaehollandiae,Grebes,Podicipedidae,Podicepiformes
+159,Marsh Sandpiper,sp,u159,Marsh Sandpiper,Tringa stagnatilis,"Snipe, Sandpipers, Godwits, Curlew, Stints and Phalaropes",Scolopacidae,Charadriiformes
+212,Australasian Shoveler,sp,u212,Australasian Shoveler,Spatula rhynchotis,"Ducks, Geese and Swans",Anatidae,Anseriformes
+213,Pink-eared Duck,sp,u213,Pink-eared Duck,Malacorhynchus membranaceus,"Ducks, Geese and Swans",Anatidae,Anseriformes
+215,Hardhead,sp,u215,Hardhead,Aythya australis,"Ducks, Geese and Swans",Anatidae,Anseriformes
+59,Eurasian Coot,sp,59,Eurasian Coot,Fulica atra,"Crakes, Rails and Swamphens",Rallidae,Gruiformes
+155,Grey-tailed Tattler,sp,u155,Grey-tailed Tattler,Tringa brevipes,"Snipe, Sandpipers, Godwits, Curlew, Stints and Phalaropes",Scolopacidae,Charadriiformes
+174,Bush Stone-curlew,sp,u174,Bush Stone-curlew,Burhinus grallarius,Stone-curlews,Burhinidae,Charadriiformes
+160,Terek Sandpiper,sp,u160,Terek Sandpiper,Xenus cinereus,"Snipe, Sandpipers, Godwits, Curlew, Stints and Phalaropes",Scolopacidae,Charadriiformes
+60,Great Crested Grebe,sp,60,Great Crested Grebe,Podiceps cristatus,Grebes,Podicipedidae,Podicepiformes
+135,Banded Lapwing,sp,u135,Banded Lapwing,Vanellus tricolor,"Plovers, Dotterel and Lapwings",Charadriidae,Charadriiformes
+207,Australian Shelduck,sp,u207,Australian Shelduck,Tadorna tadornoides,"Ducks, Geese and Swans",Anatidae,Anseriformes
+136,Grey Plover,sp,136,Grey Plover,Pluvialis squatarola,"Plovers, Dotterel and Lapwings",Charadriidae,Charadriiformes
+139,Lesser Sand Plover,sp,139,Lesser Sand Plover,Charadrius mongolus,"Plovers, Dotterel and Lapwings",Charadriidae,Charadriiformes
+141,Greater Sand Plover,sp,141,Greater Sand Plover,Charadrius leschenaultii,"Plovers, Dotterel and Lapwings",Charadriidae,Charadriiformes
+142,Oriental Plover,sp,u142,Oriental Plover,Charadrius veredus,"Plovers, Dotterel and Lapwings",Charadriidae,Charadriiformes
+157,Common Sandpiper,sp,u157,Common Sandpiper,Actitis hypoleucos,"Snipe, Sandpipers, Godwits, Curlew, Stints and Phalaropes",Scolopacidae,Charadriiformes
+164,Red Knot,sp,164,Red Knot,Calidris canutus,"Snipe, Sandpipers, Godwits, Curlew, Stints and Phalaropes",Scolopacidae,Charadriiformes
+165,Great Knot,sp,u165,Great Knot,Calidris tenuirostris,"Snipe, Sandpipers, Godwits, Curlew, Stints and Phalaropes",Scolopacidae,Charadriiformes
+167,Broad-billed Sandpiper,sp,167,Broad-billed Sandpiper,Calidris falcinellus,"Snipe, Sandpipers, Godwits, Curlew, Stints and Phalaropes",Scolopacidae,Charadriiformes
+173,Australian Pratincole,sp,u173,Australian Pratincole,Stiltia isabella,Pratincoles,Glareolidae,Charadriiformes
+177,Brolga,sp,u177,Brolga,Grus rubicunda,Cranes,Gruidae,Gruiformes
+183,Black-necked Stork,sp,183,Black-necked Stork,Ephippiorhynchus asiaticus,Storks,Ciconiidae,Pelecaniformes
+939,Asian Dowitcher,sp,u939,Asian Dowitcher,Limnodromus semipalmatus,"Snipe, Sandpipers, Godwits, Curlew, Stints and Phalaropes",Scolopacidae,Charadriiformes
+965,Long-toed Stint,sp,u965,Long-toed Stint,Calidris subminuta,"Snipe, Sandpipers, Godwits, Curlew, Stints and Phalaropes",Scolopacidae,Charadriiformes
+168,Latham's Snipe,sp,u168,Latham's Snipe,Gallinago hardwickii,"Snipe, Sandpipers, Godwits, Curlew, Stints and Phalaropes",Scolopacidae,Charadriiformes
+186,Plumed Egret,sp,u186,Plumed Egret,Ardea plumifera,"Herons, Egrets and Bitterns",Ardeidae,Pelecaniformes
+50,Baillon's Crake,sp,50,Baillon's Crake,Zapornia pusilla,"Crakes, Rails and Swamphens",Rallidae,Gruiformes
+182,Yellow-billed Spoonbill,sp,u182,Yellow-billed Spoonbill,Platalea flavipes,Ibis and Spoonbills,Threskiornithidae,Pelecaniformes
+138,Hooded Plover,sp,138,Hooded Plover,Thinornis cucullatus,"Plovers, Dotterel and Lapwings",Charadriidae,Charadriiformes
+214,Freckled Duck,sp,u214,Freckled Duck,Stictonetta naevosa,"Ducks, Geese and Swans",Anatidae,Anseriformes
+154,Wood Sandpiper,sp,u154,Wood Sandpiper,Tringa glareola,"Snipe, Sandpipers, Godwits, Curlew, Stints and Phalaropes",Scolopacidae,Charadriiformes
+978,Pectoral Sandpiper,sp,u978,Pectoral Sandpiper,Calidris melanotos,"Snipe, Sandpipers, Godwits, Curlew, Stints and Phalaropes",Scolopacidae,Charadriiformes
+178,Glossy Ibis,sp,u178,Glossy Ibis,Plegadis falcinellus,Ibis and Spoonbills,Threskiornithidae,Pelecaniformes
+191,Eastern Reef Egret,sp,191,Eastern Reef Egret,Egretta sacra,"Herons, Egrets and Bitterns",Ardeidae,Pelecaniformes
+199,Magpie Goose,sp,u199,Magpie Goose,Anseranas semipalmata,Magpie Goose,Anseranatidae,Anseriformes
+180,Straw-necked Ibis,sp,u180,Straw-necked Ibis,Threskiornis spinicollis,Ibis and Spoonbills,Threskiornithidae,Pelecaniformes
+46,Buff-banded Rail,sp,46,Buff-banded Rail,Hypotaenidia philippensis,"Crakes, Rails and Swamphens",Rallidae,Gruiformes
+5081,Large wader spp,,,,,,,
+189,White-necked Heron,sp,u189,White-necked Heron,Ardea pacifica,"Herons, Egrets and Bitterns",Ardeidae,Pelecaniformes
+977,Cattle Egret,sp,977,Cattle Egret,Bubulcus ibis,"Herons, Egrets and Bitterns",Ardeidae,Pelecaniformes
+55,Black-tailed Native-hen,sp,u55,Black-tailed Native-hen,Tribonyx ventralis,"Crakes, Rails and Swamphens",Rallidae,Gruiformes
+156,Wandering Tattler,sp,u156,Wandering Tattler,Tringa incana,"Snipe, Sandpipers, Godwits, Curlew, Stints and Phalaropes",Scolopacidae,Charadriiformes
+891,Common Redshank,sp,891,Common Redshank,Tringa totanus,"Snipe, Sandpipers, Godwits, Curlew, Stints and Phalaropes",Scolopacidae,Charadriiformes
+171,Comb-crested Jacana,sp,171,Comb-crested Jacana,Irediparra gallinacea,Jacanas,Jacanidae,Charadriiformes
+204,Wandering Whistling-Duck,sp,204,Wandering Whistling-Duck,Dendrocygna arcuata,"Ducks, Geese and Swans",Anatidae,Anseriformes
+205,Plumed Whistling-Duck,sp,u205,Plumed Whistling-Duck,Dendrocygna eytoni,"Ducks, Geese and Swans",Anatidae,Anseriformes
+45,Lewin's Rail,sp,45,Lewin's Rail,Lewinia pectoralis,"Crakes, Rails and Swamphens",Rallidae,Gruiformes
+851,Little Ringed Plover,sp,851,Little Ringed Plover,Charadrius dubius,"Plovers, Dotterel and Lapwings",Charadriidae,Charadriiformes
+51,Spotless Crake,sp,51,Spotless Crake,Zapornia tabuensis,"Crakes, Rails and Swamphens",Rallidae,Gruiformes
+5082,Medium wader spp,,,,,,,
+151,Little Curlew,sp,u151,Little Curlew,Numenius minutus,"Snipe, Sandpipers, Godwits, Curlew, Stints and Phalaropes",Scolopacidae,Charadriiformes
+216,Blue-billed Duck,sp,u216,Blue-billed Duck,Oxyura australis,"Ducks, Geese and Swans",Anatidae,Anseriformes
+198,Cape Barren Goose,sp,198,Cape Barren Goose,Cereopsis novaehollandiae,"Ducks, Geese and Swans",Anatidae,Anseriformes
+190,Pied Heron,sp,u190,Pied Heron,Egretta picata,"Herons, Egrets and Bitterns",Ardeidae,Pelecaniformes
+206,Radjah Shelduck,sp,206,Radjah Shelduck,Radjah radjah,"Ducks, Geese and Swans",Anatidae,Anseriformes
+5083,Small wader spp,,,,,,,
+934,Ruff,sp,u934,Ruff,Calidris pugnax,"Snipe, Sandpipers, Godwits, Curlew, Stints and Phalaropes",Scolopacidae,Charadriiformes
+170,Australian Painted-Snipe,sp,u170,Australian Painted-Snipe,Rostratula australis,Painted Snipe,Rostratulidae,Charadriiformes
+5076,Domestic Duck,,,,,,,
+849,White-rumped Sandpiper,sp,u849,White-rumped Sandpiper,Calidris fuscicollis,"Snipe, Sandpipers, Godwits, Curlew, Stints and Phalaropes",Scolopacidae,Charadriiformes
+2510,Teal spp,,,,,,,
+201,Green Pygmy-goose,sp,u201,Green Pygmy-goose,Nettapus pulchellus,"Ducks, Geese and Swans",Anatidae,Anseriformes
+172,Oriental Pratincole,sp,u172,Oriental Pratincole,Glareola maldivarum,Pratincoles,Glareolidae,Charadriiformes
+893,Eurasian Curlew,sp,893,Eurasian Curlew,Numenius arquata,"Snipe, Sandpipers, Godwits, Curlew, Stints and Phalaropes",Scolopacidae,Charadriiformes
+196,Black Bittern,sp,196,Black Bittern,Ixobrychus flavicollis,"Herons, Egrets and Bitterns",Ardeidae,Pelecaniformes
+932,Red-necked Phalarope,sp,u932,Red-necked Phalarope,Phalaropus lobatus,"Snipe, Sandpipers, Godwits, Curlew, Stints and Phalaropes",Scolopacidae,Charadriiformes
+5075,Domestic Goose,,,,,,,
+850,Nordmann's Greenshank,sp,u850,Nordmann's Greenshank,Tringa guttifer,"Snipe, Sandpipers, Godwits, Curlew, Stints and Phalaropes",Scolopacidae,Charadriiformes
+764,Short-billed Dowitcher,sp,764,Short-billed Dowitcher,Limnodromus griseus,"Snipe, Sandpipers, Godwits, Curlew, Stints and Phalaropes",Scolopacidae,Charadriiformes
+197,Australasian Bittern,sp,u197,Australasian Bittern,Botaurus poiciloptilus,"Herons, Egrets and Bitterns",Ardeidae,Pelecaniformes
+47,Chestnut Rail,sp,47,Chestnut Rail,Eulabeornis castaneoventris,"Crakes, Rails and Swamphens",Rallidae,Gruiformes
+184,Great-billed Heron,sp,184,Great-billed Heron,Ardea sumatrana,"Herons, Egrets and Bitterns",Ardeidae,Pelecaniformes
+816,Black Duck-Mallard hybrid,,,,,,,
+887,Buff-breasted Sandpiper,sp,u887,Buff-breasted Sandpiper,Calidris subruficollis,"Snipe, Sandpipers, Godwits, Curlew, Stints and Phalaropes",Scolopacidae,Charadriiformes
+195,Australian Little Bittern,sp,u195,Australian Little Bittern,Ixobrychus dubius,"Herons, Egrets and Bitterns",Ardeidae,Pelecaniformes
+744,South Island Pied Oystercatcher,sp,u744,South Island Pied Oystercatcher,Haematopus finschi,Oystercatchers,Haematopodidae,Charadriiformes
+857,Little Stint,sp,u857,Little Stint,Calidris minuta,"Snipe, Sandpipers, Godwits, Curlew, Stints and Phalaropes",Scolopacidae,Charadriiformes
+895,Common Ringed Plover,sp,895,Common Ringed Plover,Charadrius hiaticula,"Plovers, Dotterel and Lapwings",Charadriidae,Charadriiformes
+815,Hudsonian Godwit,sp,u815,Hudsonian Godwit,Limosa haemastica,"Snipe, Sandpipers, Godwits, Curlew, Stints and Phalaropes",Scolopacidae,Charadriiformes
+840,Tattler spp,,,,,,,
+844,American Golden Plover,sp,u844,American Golden Plover,Pluvialis dominica,"Plovers, Dotterel and Lapwings",Charadriidae,Charadriiformes
+200,Cotton Pygmy-goose,sp,200,Cotton Pygmy-goose,Nettapus coromandelianus,"Ducks, Geese and Swans",Anatidae,Anseriformes
+145,Inland Dotterel,sp,u145,Inland Dotterel,Peltohyas australis,"Plovers, Dotterel and Lapwings",Charadriidae,Charadriiformes
+822,Cox's Sandpiper,,,,,,,
+52,White-browed Crake,sp,u52,White-browed Crake,Amaurornis cinerea,"Crakes, Rails and Swamphens",Rallidae,Gruiformes
+8066,Semipalmated Plover,sp,u8066,Semipalmated Plover,Charadrius semipalmatus,"Plovers, Dotterel and Lapwings",Charadriidae,Charadriiformes
+835,Grey Phalarope,sp,u835,Red Phalarope,Phalaropus fulicarius,"Snipe, Sandpipers, Godwits, Curlew, Stints and Phalaropes",Scolopacidae,Charadriiformes
+770,Kentish Plover,sp,770,Kentish Plover,Charadrius alexandrinus,"Plovers, Dotterel and Lapwings",Charadriidae,Charadriiformes
+800,Northern Pintail,sp,u800,Northern Pintail,Anas acuta,"Ducks, Geese and Swans",Anatidae,Anseriformes
+890,Baird's Sandpiper,sp,u890,Baird's Sandpiper,Calidris bairdii,"Snipe, Sandpipers, Godwits, Curlew, Stints and Phalaropes",Scolopacidae,Charadriiformes
+53,Pale-vented Bush-hen,sp,53,Pale-vented Bush-hen,Amaurornis moluccana,"Crakes, Rails and Swamphens",Rallidae,Gruiformes
+745,Spotted Whistling-Duck,sp,u745,Spotted Whistling-Duck,Dendrocygna guttata,"Ducks, Geese and Swans",Anatidae,Anseriformes
+112,Caspian Tern,sp,u112,Caspian Tern,Hydroprogne caspia,"Gulls, Terns and Noddies",Laridae,Charadriiformes
+115,Greater Crested Tern,sp,115,Greater Crested Tern,Thalasseus bergii,"Gulls, Terns and Noddies",Laridae,Charadriiformes
+125,Silver Gull,sp,125,Silver Gull,Larus novaehollandiae,"Gulls, Terns and Noddies",Laridae,Charadriiformes
+8794,Australian Gull-billed Tern,sp,u8794,Australian Gull-billed Tern,Gelochelidon macrotarsa,"Gulls, Terns and Noddies",Laridae,Charadriiformes
+110,Whiskered Tern,sp,110,Whiskered Tern,Chlidonias hybrida,"Gulls, Terns and Noddies",Laridae,Charadriiformes
+117,Little Tern,sp,117,Little Tern,Sternula albifrons,"Gulls, Terns and Noddies",Laridae,Charadriiformes
+953,Common Tern,sp,953,Common Tern,Sterna hirundo,"Gulls, Terns and Noddies",Laridae,Charadriiformes
+114,White-fronted Tern,sp,114,White-fronted Tern,Sterna striata,"Gulls, Terns and Noddies",Laridae,Charadriiformes
+126,Pacific Gull,sp,126,Pacific Gull,Larus pacificus,"Gulls, Terns and Noddies",Laridae,Charadriiformes
+118,Fairy Tern,sp,118,Fairy Tern,Sternula nereis,"Gulls, Terns and Noddies",Laridae,Charadriiformes
+109,White-winged Black Tern,sp,u109,White-winged Black Tern,Chlidonias leucopterus,"Gulls, Terns and Noddies",Laridae,Charadriiformes
+116,Lesser Crested Tern,sp,116,Lesser Crested Tern,Thalasseus bengalensis,"Gulls, Terns and Noddies",Laridae,Charadriiformes
+981,Kelp Gull,sp,981,Kelp Gull,Larus dominicanus,"Gulls, Terns and Noddies",Laridae,Charadriiformes
+104,Australasian Gannet,sp,u104,Australasian Gannet,Morus serrator,Gannets and Boobies,Sulidae,Pelecaniformes
+95,Lesser Frigatebird,sp,95,Lesser Frigatebird,Fregata ariel,Frigatebirds,Fregatidae,Pelecaniformes
+113,Roseate Tern,sp,113,Roseate Tern,Sterna dougallii,"Gulls, Terns and Noddies",Laridae,Charadriiformes
+122,Brown Noddy,sp,122,Brown Noddy,Anous stolidus,"Gulls, Terns and Noddies",Laridae,Charadriiformes
+121,Bridled Tern,sp,121,Bridled Tern,Onychoprion anaethetus,"Gulls, Terns and Noddies",Laridae,Charadriiformes
+102,Brown Booby,sp,102,Brown Booby,Sula leucogaster,Gannets and Boobies,Sulidae,Pelecaniformes
+67,Little Shearwater,sp,67,Little Shearwater,Puffinus assimilis,Petrels and Shearwaters,Procellariidae,Procellariiformes
+83,Fairy Prion,sp,u83,Fairy Prion,Pachyptila turtur,Petrels and Shearwaters,Procellariidae,Procellariiformes
+71,Short-tailed Shearwater,sp,u71,Short-tailed Shearwater,Ardenna tenuirostris,Petrels and Shearwaters,Procellariidae,Procellariiformes
+128,Arctic Jaeger,sp,u128,Arctic Jaeger,Stercorarius parasiticus,Skuas and Jaegers,Stercorariidae,Charadriiformes
+119,Black-naped Tern,sp,119,Black-naped Tern,Sterna sumatrana,"Gulls, Terns and Noddies",Laridae,Charadriiformes
+972,White Tern,sp,972,White Tern,Gygis alba,"Gulls, Terns and Noddies",Laridae,Charadriiformes
+111,Common Gull-billed Tern,sp,111,Common Gull-billed Tern,Gelochelidon nilotica,"Gulls, Terns and Noddies",Laridae,Charadriiformes
+68,Fluttering Shearwater,sp,u68,Fluttering Shearwater,Puffinus gavia,Petrels and Shearwaters,Procellariidae,Procellariiformes
+945,Pomarine Jaeger,sp,u945,Pomarine Jaeger,Stercorarius pomarinus,Skuas and Jaegers,Stercorariidae,Charadriiformes
+913,Hutton's Shearwater,sp,u913,Hutton's Shearwater,Puffinus huttoni,Petrels and Shearwaters,Procellariidae,Procellariiformes
+69,Wedge-tailed Shearwater,sp,69,Wedge-tailed Shearwater,Ardenna pacifica,Petrels and Shearwaters,Procellariidae,Procellariiformes
+91,Shy Albatross,sp,u91,Shy Albatross,Thalassarche cauta,Albatrosses,Diomedeidae,Procellariiformes
+124,Black Noddy,sp,124,Black Noddy,Anous minutus,"Gulls, Terns and Noddies",Laridae,Charadriiformes
+5072,Shy/White-capped Albatross spp,,,,,,,
+77,White-headed Petrel,sp,u77,White-headed Petrel,Pterodroma lessonii,Petrels and Shearwaters,Procellariidae,Procellariiformes
+952,Arctic Tern,sp,u952,Arctic Tern,Sterna paradisaea,"Gulls, Terns and Noddies",Laridae,Charadriiformes
+108,White-tailed Tropicbird,sp,108,White-tailed Tropicbird,Phaethon lepturus,Tropicbirds,Phaethontidae,Phaetontiformes
+65,White-faced Storm-Petrel,sp,65,White-faced Storm-Petrel,Pelagodroma marina,Southern Storm-Petrels,Oceanitidae,Procellariiformes
+120,Sooty Tern,sp,120,Sooty Tern,Onychoprion fuscatus,"Gulls, Terns and Noddies",Laridae,Charadriiformes
+70,Sooty Shearwater,sp,u70,Sooty Shearwater,Ardenna grisea,Petrels and Shearwaters,Procellariidae,Procellariiformes
+85,Common Diving-Petrel,sp,85,Common Diving-Petrel,Pelecanoides urinatrix,Petrels and Shearwaters,Procellariidae,Procellariiformes
+931,Buller's Albatross,sp,931,Buller's Albatross,Thalassarche bulleri,Albatrosses,Diomedeidae,Procellariiformes
+88,Black-browed Albatross,sp,u88,Black-browed Albatross,Thalassarche melanophris,Albatrosses,Diomedeidae,Procellariiformes
+8681,Grey-faced Petrel,sp,u8681,Grey-faced Petrel,Pterodroma gouldi,Petrels and Shearwaters,Procellariidae,Procellariiformes
+127,Brown Skua,sp,127,Brown Skua,Catharacta antarctica,Skuas and Jaegers,Stercorariidae,Charadriiformes
+72,Flesh-footed Shearwater,sp,u72,Flesh-footed Shearwater,Ardenna carneipes,Petrels and Shearwaters,Procellariidae,Procellariiformes
+105,Masked Booby,sp,105,Masked Booby,Sula dactylatra,Gannets and Boobies,Sulidae,Pelecaniformes
+94,Great Frigatebird,sp,94,Great Frigatebird,Fregata minor,Frigatebirds,Fregatidae,Pelecaniformes
+885,Franklin's Gull,sp,u885,Franklin's Gull,Larus pipixcan,"Gulls, Terns and Noddies",Laridae,Charadriiformes
+107,Red-tailed Tropicbird,sp,107,Red-tailed Tropicbird,Phaethon rubricauda,Tropicbirds,Phaethontidae,Phaetontiformes
+90,Grey-headed Albatross,sp,u90,Grey-headed Albatross,Thalassarche chrysostoma,Albatrosses,Diomedeidae,Procellariiformes

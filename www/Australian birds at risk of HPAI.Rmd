@@ -1,6 +1,4 @@
 ---
-title: "Australian bird species at risk of HPAI Clade 2.3.4.4b after an incursion event"
-date: "2024-11-12"
 output: 
   html_document:
 ---
@@ -11,37 +9,67 @@ output:
 }
 </style>
 
+
+
 ```{r setup, include=FALSE}
-# knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
-# library(tidyverse)
-# library(ggsignif)
-# library(emmeans)
-# library(viridis)
-# library(brms)
-# library(ape)
-# library(phangorn)
-# library(castor)
-# library(ggtree)
-# library(RColorBrewer)
-# library(patchwork)
-# library(kableExtra)
-# library(DT)
-# library(plotly)
-# conWLAB <- read_csv("data/conWLAB.csv")
-# prunedtree <- read.tree("data/prunedtree.tre")
-# HPAI_withold <- read_csv("data/HPAI_withold.csv")
-# FamPhyl.1 <- readRDS("data/FamPhyl1_Jan.rds")
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+library(tidyverse)
+library(ggsignif)
+library(emmeans)
+library(viridis)
+#library(brms)
+library(ape)
+library(phangorn)
+library(castor)
+#install.packages("BiocManager")
+#BiocManager::install("ggtree")
+library(ggtree)
+library(RColorBrewer)
+library(patchwork)
+library(kableExtra)
+library(DT)
+library(plotly)
+#library(rredlist)
+conWLAB <- read_csv("data/conWLAB.csv")
+prunedtree <- read.tree("data/prunedtree.tre")
+HPAI_withold <- read_csv("data/HPAI_withold.csv")
 ```
+<br />
 
-The aim of this document is to predict susceptibility of Australian birds to Highly Pathogenic Avian Influenza Clade 2.3.4.4b (hereon, HPAI). We do this using a phylogenetic modelling approach, where we apply a family-level phylogenetic model on the HPAI notifications from the current panzootic, to determine the phylogenetic signal in HPAI susceptibility. Outbreak data was retrieved from WAHIS (World Animal Health Information System) of the World Organisation for Animal Health (WOAH) on 06/01/2025. 
+### Australian bird species at risk of HPAI Clade 2.3.4.4b (H5 bird flu) after an incursion event
 
-Since genetically related species importantly also share physiological, behavioural and ecological characteristics, our approach of using family-level phylogenetic signal also serves as a proxy for species sharing similar habitats/ecologies. Thus, we assume that the phylogeny of birds also informs on the specific environmental conditions they prefer (e.g. freshwater habitats), their specific behaviours (e.g. colony breeding), and foraging strategies (e.g. scavenging) and therewith their propensity to become infected with HPAI.  In other words, we assume that species in a family are similarly susceptible, regardless of how common those species are and how often those species may have or may not have been tested for HPAI. We elaborate more on the validity of this approach in the "Why using family, rather than ecological traits, makes sense for predicting HPAI" section, and on the assumptions and caveats of this analysis in the "Data comments" section below. 
+<br />
 
-Since HPAI susceptibility is likely importantly determined by the preferred environmental conditions, specific behaviours, foraging strategies and other behavioural and ecological conditions, we would like to stress that our analysis predicts disease susceptibility in *natural* settings and not necessarily for birds in captivity. As is obvious from the current panzootic, we should assume that the disease *can* spread to all species of birds. 
+This part of AviFluMap applies a family-level phylogenetic model using the H5 HPAI events from the current panzootic, to determine the phylogenetic signal in HPAI susceptibility to infection (and subsequent sickness and death). The model is based on event data retrieved from WAHIS provided by the World Organisation for Animal Health (WOAH) as at 06/01/2025. The model uses this H5 HPAI event data to predict the likely prevalence of infections in Australian species. 
 
-## Step one: modelling outbreak prevalence among avian families
+**IMPORTANT:** Please see the caveats on using this tool in *About the Data* to learn more about the data sets including disclaimers, and assumptions and limitations of the modelling output. Users should revisit the site regularly to access the latest analysis based on the latest data in WAHIS. When the data used for AviFluMap is updated, the analysis may show revised results (such as new species at risk). Data will continue to be updated to AviFluMap. However at present the schedule for future updates has not yet been determined.
 
-The first step in our analysis is to model the number of HPAI notifications of the current avian influenza panzootic to determine the phylogenetic signal. The HPAI notifications in our dataset are all since October 2021 and are all from outside of Australia, and have been reported to the WOAH-WAHIS database. While not all cases are confirmed to be HPAI clade 2.3.4.4b, this is most likely the case for the vast majority. The model includes a family-level phylogeny of affected birds, from <a href="https://doi.org/10.1093/molbev/msaa191" target="_blank">Kuhl et al. 2021</a>.
+<br />
+
+### Defining *HPAI Susceptibility*
+
+<br />
+
+In the context of AviFluMap, the term “HPAI susceptibility” refers to the likelihood that a given bird species will become infected with H5 bird flu and subsequently develop disease due to infection, act as a reservoir for its maintenance, and/or assist in the spread of the virus. 
+Because the majority (~98%) of H5 HPAI wild bird events in the WAHIS database since October 2021 report deaths for the species recorded, AviFluMap assumes that a species’ predicted susceptibility to infection is also closely linked to a species predicted likelihood of experiencing sickness and death (referred to as “Species at Risk”). 
+
+It is important to note that the species risk shown by AviFluMap does not consider individual population dynamics, conservation status, or other threatening processes that may affect population vulnerability. Consequently, “the Species at Risk Index” should not be used in isolation to predict a species population level impact of H5 bird flu. 
+
+To a lesser extent, AviFluMap may also identify species that are less likely to experience sickness and death but could still play a role in maintaining or spreading the virus as reservoirs or carriers. Note that reservoir species, species that disperse the virus and species that experience sickness or death (individually or at the species level) are not necessarily the same.
+
+Since genetically related species also share physiological, behavioural and ecological characteristics, the approach of using family-level phylogenetic signal also serves as a proxy for species sharing similar habitats/ecologies. Thus, it is assumed that the phylogeny of birds also informs the specific environmental conditions they prefer (e.g. freshwater habitats), their specific behaviours (e.g. colony breeding), and foraging strategies (e.g. scavenging) and in turn HPAI susceptibility. In other words, it is assumed that all species in the same family are similarly susceptible to HPAI infection and subsequent sickness and death, regardless of how common those species are and how often they may have or may not have been tested for HPAI. For further explanation on the validity of this approach, see the *About the Data* for a full list of assumptions relating to this analysis.
+
+Since species’ HPAI susceptibility is likely determined by the preferred environmental conditions, specific behaviours, foraging strategies and other behavioural and ecological conditions, it should be stressed that the analysis predicts HPAI susceptibility in *natural* settings and not necessarily for birds in captivity. It should be assumed that the HPAI virus *can* infect all species of birds.
+
+<br />
+
+### Step one: modelling outbreak prevalence among avian families
+
+<br />
+
+The first step in the analysis is to model the number of H5 HPAI events of the current avian influenza panzootic to determine the phylogenetic signal. The dataset consists of all H5 HPAI events in wild birds reported to the WAHIS database  since October 2021, all of which have occurred outside of Australia. While not all events are confirmed to be HPAI clade 2.3.4.4b, this is most likely the case for the vast majority of wild bird events. The model includes a family-level phylogeny of affected birds, from <a href="https://doi.org/10.1093/molbev/msaa191" target="_blank">Kuhl et al. 2021</a>.
+
+<br />
 
 
 ```{r, fig.width=8, fig.height=8}
@@ -53,6 +81,7 @@ phyl2 <- drop.tip(phylcon2, phylcon2$tip.label[-match(keep,phylcon2$tip.label)])
 PhylSp2 <- unique(phyl2$tip.label)
 HPAIold_raw <- HPAI_withold %>% select(scientificName, Order, Outbreaks)
 ```
+
 ```{r, fig.width=10, fig.height=10}
 HPAIold_raw <- HPAIold_raw %>% 
   mutate(index = match(scientificName, phylcon2$tip.label))
@@ -96,9 +125,18 @@ p +
 
 The model reports a statistically significant phylogenetic signal (on a scale of 0-1, Pagel's lambda: 0.91, 95% CI: 0.54 - 1.00), and the phylogeny shows clusterings of outbreaks amongst **ducks and geese** (Anseriformes), **seabirds** (Suliformes), **shorebirds** (Charadriiformes), **birds of prey** (Accipitriformes and Falconiformes), and **crows** (within Passeriformes).
 
-## Step two: Predicting susceptibility to HPAI outbreaks in Australian species
+<br />
 
-We used the above model to predict which Australian species are likely to be particularly susceptible to HPAI outbreaks, again using a family-level phylogeny. The list of Australian birds we used is the <a href="https://birdata.birdlife.org.au/whats-in-a-name" target="_blank">BirdLife Working List of Australian Birds</a>, which has been pruned to exclude rare vagrants and very uncommon non-native species. Susceptibility to HPAI outbreaks was expressed on a scale from 0-1. This score was based on the predicted number of HPAI notifications by the model outlined above, where 80 predicted notifications represented a susceptibility index of 1.  We deemed any species that had an estimated HPAI susceptibility index of 0.5 or more as being moderately susceptible, and 0.8 or more as being highly susceptible. 
+### Step two: Predicting HPAI susceptibility in Australian species
+
+<br />
+
+The above model was then used to predict which Australian species are likely to be particularly susceptible to HPAI infection, again using a family-level phylogeny. The list of Australian birds is the <a href="https://birdata.birdlife.org.au/whats-in-a-name" target="_blank">BirdLife Working List of Australian Birds</a>, which has been pruned to exclude rare vagrants and very uncommon non-native species. Susceptibility to HPAI infection was expressed as an “HPAI Susceptibility Index” on a scale from 0-1. This score was based on the predicted number of HPAI events by the model outlined above, where 80 predicted events represented a susceptibility index of 1. Any species that had an estimated HPAI susceptibility index of 0.5 or more was deemed as being moderately susceptible to HPAI infection and 0.8 or more as being highly susceptible to HPAI infection. A susceptibility index of 0.99 corresponds to 79 predicted HPAI events (in a family).
+
+It should be noted that the predictions of HPAI susceptibility may change as more data becomes available. Therefore, this index should be used as an indicator of HPAI susceptible families. As with any empirical modelling, the predictions are likely more accurate for the families that are well represented in the data (such as Sulidae and Laridae) than the ones with little or no data (such as Anhingidae).
+
+<br />
+
 
 ```{r, fig.width=25, fig.height=25}
 fams <- unique(prunedtree$tip.label)
@@ -110,6 +148,8 @@ famsBoth <- c(famsDS, famsAus)
 todrop2 <- fams[!(fams %in% famsBoth)]
 prunedtree3 <- drop.tip(prunedtree, todrop2)
 ```
+
+
 ```{r, results='hide'}
 FamilyAvg <- HPAI_withold %>% 
   group_by(Family) %>% summarise(Outbreaks = mean(Outbreaks))
@@ -137,6 +177,7 @@ normalize_log <- function(x) {
 # Apply normalization
 tip_resultsAus <- tip_resultsAus %>% 
   mutate(HPAISusceptibilityIndex = normalize_log(Outbreaks))
+write.csv(tip_resultsAus, "tip_resultsAus.csv", row.names = FALSE)
 ```
 
 ```{r, fig.width=10, fig.height=10}
@@ -156,27 +197,48 @@ ggtree(prunedtree4, layout = "circular", branch.length = "none") %<+% tip_result
   guides(size=guide_legend(title="Predicted HPAI susceptibility"))
 ```
 
-Lastly, we present a full list of HPAI outbreak susceptibility for all Australian species. While not used in calculating their susceptibility index (again, only phylogeny was used to that effect), aside from susceptibility index, the table also includes some of the key ecological attributes that are thought important in determining species' outbreak susceptibility. The ecological traits include whether it congregates or not, whether it breeds in colonies, and its predominant habitat and diet. The list is currently ordered by families with the highest estimated outbreaks, but can be ordered based on other columns by interacting with the column headings. The table can also be downloaded using a range of formats.
+<br />
+
+Lastly, we present a full list of HPAI outbreak susceptibility for all Australian bird families. The list is currently ordered by families with the highest estimated outbreaks, but can be ordered based on other columns by interacting with the column headings. The table can also be downloaded using a range of formats.
+
+<br />
 
 ```{r, fig.width=20, fig.height=20}
 predicted <- conWLAB %>% 
   left_join(tip_resultsAus, by = "Family")
-treedat <- predicted %>% select(FamilyCommonName, TaxonName, HPAISusceptibilityIndex, CongregateTrue, `Colony?`, Habitat_Groupings, Diet_Groupings)
-treedat <- treedat %>% arrange(desc(HPAISusceptibilityIndex))
-treedat <- treedat %>% rename("Family" = "FamilyCommonName",
-                              "Species" = "TaxonName",
+predicted <- predicted %>% arrange(desc(HPAISusceptibilityIndex))
+
+treedat <- predicted %>% select(Order, FamilyCommonName, FamilyScientificName, HPAISusceptibilityIndex)
+
+treedat <- treedat %>% rename("Family (common name)" = "FamilyCommonName",
+                              "Family (scientific name)" = "FamilyScientificName",
                               "Estimated HPAI Susceptibility Index" = "HPAISusceptibilityIndex")
-datatable(treedat, colnames = c("Habitat" = "Habitat_Groupings", "Diet" = "Diet_Groupings", "Congregating bird?" = "CongregateTrue", "Colony breeder?" = "Colony?"), options = list(iDisplayLength = 25, dom = 'Blfrtip', buttons = c('copy', 'csv', 'excel', 'pdf')), extensions = 'Buttons') %>% 
+datatable(treedat, options = list(iDisplayLength = 25, dom = 'Blfrtip', buttons = c('copy', 'csv', 'excel', 'pdf')), extensions = 'Buttons') %>% 
   formatRound(columns = "Estimated HPAI Susceptibility Index", digits = 2)
 ```
 
-## Why using family, rather than ecological traits, makes sense for predicting HPAI
+<br />
 
-In the approach outlined above, we use family-level phylogeny to understand and predict HPAI susceptibility. Some of the feedback we've received to date has questioned why we did not use ecological traits, like habitat, diet, and tendency to congregate, to model HPAI notifications. Below, we outline why using ecological traits may be confounding, and why family very adequately accounts for much ecological information on the various species.  
+<a href="https://vhost2009.hosted-sites.deakin.edu.au/HPAI/Species-predictions-list.html" target="_blank"> Click here</a> for a full list of Australian species belonging to these families, their key ecological traits, and their conservation status.
 
-The heatmap below shows total number of HPAI notifications in birds with different diet and habitats, separated by whether they congregate or not. The numbers inside the tiles will update automatically when a family is chosen. When "All" is selected, it shows the total number of species that fit that description. When one of the key families is selected, it will show the proportion of species in that category that are part of the selected family. Furthermore, when a family is selected, the heatmap will update to show total number of notifications for that family.  
+<br />
 
-The aim of this is to show that broad categorisations like "freshwater" or "predator" are not insightful by themselves - they interact with other categories. For example, it is only congregating freshwater birds with plant-based diets that have many HPAI notifications. By selecting different families, it should become clear how Family, as a taxonomic grouping, accounts for many such interactions - ducks disproportionately account for the freshwater birds with plant-based diets, for example. Hence, our approach of using family-level phylogeny accounts for considerable ecological information, and therefore provides a valid basis for our predictions of which Australian birds may be susceptible to HPAI.
+<br />
+
+### Why using family-level phylogeny makes sense for predicting HPAI susceptibility
+
+<br />
+
+In the approach outlined above, family-level phylogeny is used to understand and predict HPAI susceptibility. Some of the feedback received to date on AviFluMap has questioned why ecological traits (such as habitat, diet, and tendency to congregate) were not used in the model. Below, is an outline of about why using ecological traits may be confounding, and why family very adequately accounts for much ecological information on the various species.
+
+The heatmap below shows total number of HPAI events in birds with different diet and habitats, separated by whether they congregate or not. The numbers inside the tiles will update automatically when a family is chosen. When “All” is selected, it shows the total number of species that fit that description. When one of the key families is selected, it will show the proportion of species in that category that are part of the selected family. Furthermore, when a family is selected, the heatmap will update to show total number of notifications for that family.
+
+The aim of this is to show that broad categorisations like “freshwater” or “predator” are not insightful by themselves - these interact with other categories. For example, it is only congregating freshwater birds with plant-based diets that have many HPAI notifications. By selecting different families, it should become clear how Family, as a taxonomic grouping, accounts for many such interactions - ducks disproportionately account for the freshwater birds with plant-based diets, for example. Hence, using family-level phylogeny takes into account a considerable amount of ecological information, and therefore provides a valid basis for predictions of which Australian birds may be susceptible to HPAI infection.
+
+Still, while using family-level phylogeny thus makes much sense for predicting HPAI susceptibility for individual species, exceptions might apply, and predictions should be considered carefully. For example, it might be expected that an Australian wood duck would be less susceptible to HPAI infection than other ducks, because it has a different ecology to other members of its taxonomic family. For this reason, decisions on wildlife risk mitigation strategies should be cautiously based the susceptibility predictions herein, and with an understanding of uncertainty. Especially when considering species that have thus far not experienced exposure to H5 bird flu, which includes many species native to Australia. 
+ 
+
+<br />
 
 
 ```{r, fig.width = 10, fig.height=6}
@@ -369,8 +431,5 @@ np
 
 ```
 
-## Data comments and caveats
 
-The predictions in this document come with a number of caveats. The most obvious one is that the dataset we train our first model on contains *reported* outbreaks of avian influenza - that means there is likely some bias in which species are being tested, and where those species occur (<a href="https://doi.org/10.1038/s41559-023-02182-x" target="_blank">Klaassen and Wille 2023</a>). We might therefore be underestimating outbreaks in rarer bird families or those that occur in more remote areas. 
 
-We also use the family-level phylogeny to infer species with similar ecological traits. This is very likely to be true- closely related species do tend to share similar habitats and traits. We explored other analyses to see if ecological traits could predict disease outbreaks, using trait databases like Avonet and EltonTraits, but found that they often had slightly arbitrary trait designations for species that we know share very similar ecologies. Therefore, we decided to not pursue this approach, and instead use family-level groupings to infer their ecological, behavioural and physiological traits.
