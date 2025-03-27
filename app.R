@@ -89,7 +89,7 @@ ui <- fluidPage(
                               absolutePanel(id = "controls", class = "panel panel-default",
                                             top = 80, left = 30, width = 300, fixed=TRUE,
                                             draggable = FALSE, height = "auto",
-                                            h4("HPAI Outbreaks:"),
+                                            h4("Global H5 HPAI events:"),
                                             br(),
                                             fluidRow(
                                               column(12, sliderTextInput("hpai_month", label = "", 
@@ -231,42 +231,48 @@ ui <- fluidPage(
                #### Aggregations #####
                {
                tabPanel("Bird Aggregations",
-                        div(class="outer",
-                            tags$head(includeCSS("styles.css")),
+                        div(class="outer", tags$head(includeCSS("styles.css")),
                             
                          leafletOutput("AggrMap", width="100%", height="100%") ,
                          
                          absolutePanel(id = "controls", class = "panel panel-default",
                                        top = 80, left = 30, width = 350, fixed = TRUE,
                                        draggable = FALSE, height = "auto",
-                                       conditionalPanel(
-                                         condition = "input.AggrMap_shape_click == null",
-                                         h5('Please wait for the map to load.'),
-                                         br(),
-                                         h5('Possible interaction:'),
-                                         h5('- zoom (in/out)'),
-                                         h5('- cell selection'),
-                                         h5('- special bird area information')
-                                       ),
-                                       br(),
                                        
+                                       br(),
+                                       h4('Bird Aggregation Hotspots:'),
+                                       h5("Migratory shorebird, waterbird and seabird sites with 5,000 birds or more, and where these birds are spending the majority of their time while in Australia"),
+                                       hr(style = "border-top: 1px solid #74b9e1;"),
+                                       
+                                       h4('Show Special Bird Areas:'),
+                                       fluidRow(column(6, materialSwitch("showBirdAreas", "", status = "info", value = FALSE))),
+                                       hr(style = "border-top: 1px solid #74b9e1;"),
+                                       
+                                       h4('Interactve details:'),
+                                       fluidRow(column(6, materialSwitch("interactiveDetails", "", status = "info", value = FALSE))),
+                                       
+                                       br(),
                                        conditionalPanel(
-                                         condition = "input.AggrMap_shape_click != null",
+                                         condition = "input.AggrMap_shape_click != null & input.interactiveDetails",
                                          h4("Maximum count:"),
                                          verbatimTextOutput("MaxCount"),
                                          conditionalPanel(
                                            condition = "input.AggrMap_shape_click != null",
                                            plotOutput("speciesPie", width = 330, height = 300),
-                                           hr(style = "border-top: 1px solid #74b9e1;"),
                                            fluidRow(
-                                             column(8, materialSwitch("speciesDetail", "Details", status = "info", value = FALSE))
+                                             column(8, materialSwitch("speciesDetail", "Species summary", status = "info", value = FALSE))
                                            ),
                                            conditionalPanel(
                                              condition = "input.speciesDetail",
                                              plotOutput("speciesDetail", width = 330, height = 290)
                                            )
                                          )
-                                       )
+                                       ),
+                                       
+                                       hr(style = "border-top: 1px solid #74b9e1;"),
+                                       h5("Note: This is not a 'live' map. Whilst it is known that species distribution and density change over time (seasonally and between years) this map is static."),
+                                       
+                                       
                          )
                          
                         )
@@ -305,7 +311,7 @@ server <- function(input, output) {
   
   {
     output$Home <- renderUI({
-      tags$iframe(src="Home.html", style='width:80vw;height:80vh;', scrolling = 'yes', frameBorder = '0')
+      tags$iframe(src="Home.html", style='width:80vw;height:80vh;', scrolling = 'yes', frameBorder = '1')
     })
   }
   
@@ -594,7 +600,6 @@ server <- function(input, output) {
       addPolylines(data = flyway, color = "#5F5962", weight = 1.2)
   })
   
-  
   observe({
     proxy <- leafletProxy("MovMap", data = speciesDistr())
     proxy %>% clearControls() %>% clearGroup(group = "flags")
@@ -756,36 +761,32 @@ server <- function(input, output) {
   output$AggrMap <- renderLeaflet({
     
     leaflet(options = leafletOptions(zoomControl = FALSE)) %>% 
-      addTiles(group = "StreetMap") %>%
       addProviderTiles(providers$Esri.WorldShadedRelief, group = "Basemap") %>%
       addProviderTiles(providers$CartoDB.VoyagerOnlyLabels, group = "Basemap") %>%
-      addLayersControl(baseGroups = c("Basemap", "StreetMap"),
-                       position = "topright") %>%
       setView(lng = 131, lat = -28, zoom = 5) %>%
+      # addGeoRaster(
+      #           birdAggr[[4]],
+      #           opacity = 0.6,
+      #           colorOptions = colorOptions(
+      #             breaks = brks,
+      #             palette = cls),
+      #           group = 'MidZoom') %>%
       addGeoRaster(
-                birdAggr[[4]],
+                birdAggr[[3]],
                 opacity = 0.6,
                 colorOptions = colorOptions(
                   breaks = brks,
                   palette = cls),
-                group = 'MidZoom') %>%
-      addPolygons(data = birdAggr[[2]],
-                  weight = 1,
-                  color = "grey40",
-                  fillColor = ~ Color,
-                  fillOpacity = 0.8,
-                  layerId = ~ RID,
-                  group = "MaxZoom") %>%
-      addPolygons(data = sba,
-                  color = "black", weight = 1,
-                  fillColor = "grey50", fillOpacity = 0.2,
-                  # layerId = ~ OBJECTID,
-                  label = lapply(labelText, htmltools::HTML),
-                  labelOptions = labelOptions(noHide = F, direction = "top"),
-                  group = "MaxZoom") %>%
-      groupOptions("MaxZoom", zoomLevels = 7:20) %>%
-      groupOptions("MidZoom", zoomLevels = 1:6) %>%
-      # groupOptions("MinZoom", zoomLevels = 1:4) %>%
+                group = 'raster') %>%
+      # addPolygons(data = birdAggr[[2]],
+      #             weight = 1,
+      #             color = "grey40",
+      #             fillColor = ~ Color,
+      #             fillOpacity = 0.8,
+      #             layerId = ~ RID,
+      #             group = "MaxZoom") %>%
+      # groupOptions("MaxZoom", zoomLevels = 7:20) %>%
+      # groupOptions("MidZoom", zoomLevels = 1:6) %>%
       addLegend("bottomright", 
                 colors = cls,
                 labels = c("1-100", "100-1,000", "1,000-5,000", "5,000-10,000", 
@@ -800,6 +801,69 @@ server <- function(input, output) {
         }")
     
   })
+  
+  
+  observe({
+    proxy <- leafletProxy("AggrMap") %>%
+      clearShapes()
+    
+    if(input$showBirdAreas & input$interactiveDetails) {
+      proxy <- proxy %>% 
+        clearGroup('raster') %>%
+        addPolygons(data = sba,
+                    color = "black", weight = 1,
+                    fillColor = "grey50", fillOpacity = 0.2,
+                    label = lapply(labelText, htmltools::HTML),
+                    labelOptions = labelOptions(noHide = F, direction = "top")) %>%
+        addPolygons(data = birdAggr[[2]],
+                    weight = 1,
+                    color = "grey40",
+                    fillColor = ~ Color,
+                    fillOpacity = 0.8,
+                    layerId = ~ RID)
+    }
+    
+    if(!input$showBirdAreas & input$interactiveDetails) {
+      proxy <- proxy %>%
+        clearGroup('raster') %>%
+        addPolygons(data = birdAggr[[2]],
+                    weight = 1,
+                    color = "grey40",
+                    fillColor = ~ Color,
+                    fillOpacity = 0.8,
+                    layerId = ~ RID)
+    }
+    
+    if(input$showBirdAreas & !input$interactiveDetails) {
+      proxy <- proxy %>% 
+        addGeoRaster(
+          birdAggr[[3]],
+          opacity = 0.6,
+          colorOptions = colorOptions(
+            breaks = brks,
+            palette = cls),
+          group = 'raster') %>%
+        addPolygons(data = sba,
+                    color = "black", weight = 1,
+                    fillColor = "grey50", fillOpacity = 0.2,
+                    label = lapply(labelText, htmltools::HTML),
+                    labelOptions = labelOptions(noHide = F, direction = "top"))
+    }
+    
+    if(!input$showBirdAreas & !input$interactiveDetails) {
+    proxy <- proxy %>%
+      addGeoRaster(
+        birdAggr[[3]],
+        opacity = 0.6,
+        colorOptions = colorOptions(
+          breaks = brks,
+          palette = cls),
+        group = 'raster')
+    }
+  })
+  
+  
+  
   }
   
   ##########################
