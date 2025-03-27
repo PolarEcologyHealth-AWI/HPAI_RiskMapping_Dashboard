@@ -1,0 +1,12 @@
+name: HPAI_RiskMapping_Dashboard
+title: HPAI_RiskMapping_Dashboard
+username: slisovski
+account: slisovski
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 14353812
+bundleId: 10011687
+url: https://slisovski.shinyapps.io/HPAI_RiskMapping_Dashboard/
+version: 1
+asMultiple: FALSE
+asStatic: FALSE

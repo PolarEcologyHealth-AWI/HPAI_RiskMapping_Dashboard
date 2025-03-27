@@ -259,6 +259,7 @@ ui <- fluidPage(
                                          conditionalPanel(
                                            condition = "input.AggrMap_shape_click != null",
                                            plotOutput("speciesPie", width = 330, height = 300),
+                                           br(),
                                            fluidRow(
                                              column(8, materialSwitch("speciesDetail", "Species summary", status = "info", value = FALSE))
                                            ),
