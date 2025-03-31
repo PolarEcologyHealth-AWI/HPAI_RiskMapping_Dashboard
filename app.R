@@ -69,6 +69,15 @@ ui <- fluidPage(
                windowTitle = "HPAI Dashboard",
                title = HTML("<a style='text-decoration:none;cursor:default;color:#FFFFFF;' class='active' href='#'>AviFluMap: a H5 Bird Flu Model Tool for Australia's Wild birds</a>"), 
                 
+               #### Home #####
+               {
+                 tabPanel("Home",
+                      fluidRow(
+                          column(12, align="center", htmlOutput("Home")),
+                      )
+                 )
+               },
+               
                #### Further info #####
                {
                  tabPanel("Data Information",
@@ -280,15 +289,6 @@ ui <- fluidPage(
                  )
                },
                
-               # #### Home #####
-               # {
-               #   tabPanel("Home",
-               #        fluidRow(
-               #            column(12, align="center", htmlOutput("Home")),
-               #        )
-               #   )
-               # },
-               
                #### About #####
                {
                  tabPanel("About AviFluMap",
@@ -310,11 +310,11 @@ server <- function(input, output) {
   #### Home ####
   ###############
   
-  # {
-  #   output$Home <- renderUI({
-  #     tags$iframe(src="Home.html", style='width:80vw;height:80vh;', scrolling = 'yes', frameBorder = '1')
-  #   })
-  # }
+  {
+    output$Home <- renderUI({
+      tags$iframe(src="Home.html", style='width:80vw;height:80vh;', scrolling = 'yes', frameBorder = '0')
+    })
+  }
   
   ###################
   #### Outbreaks ####
