@@ -67,7 +67,7 @@ ui <- fluidPage(
                collapsible = TRUE, fluid = TRUE,
                id = "navbar",
                windowTitle = "HPAI Dashboard",
-               title = HTML("<a style='text-decoration:none;cursor:default;color:#FFFFFF;' class='active' href='#'>High AviFluMap: a H5 Bird Flu Model Tool for Australia's Wild birds</a>"), 
+               title = HTML("<a style='text-decoration:none;cursor:default;color:#FFFFFF;' class='active' href='#'>AviFluMap: a H5 Bird Flu Model Tool for Australia's Wild birds</a>"), 
                 
                #### Further info #####
                {
