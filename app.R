@@ -32,25 +32,25 @@ load("data/birdAggr.rda")
 
 ### Pre-calculations
 {
-sf_tracks <- sf_tracks %>% 
-  mutate(Color = ifelse(Species%in%c("Short-tailed Shearwater", "Wedge-tailed Shearwater"),
-                 rainbow(365)[Date], Color))
-
-outbreakSM <- outbreakDat %>% st_drop_geometry() %>%
-  group_by(Year, is_wild) %>% summarise(sample = sum(sample))
-
-legendDistr <- dist %>% st_drop_geometry %>% filter(!duplicated(CODE)) %>%
-  dplyr::select(CODE, COLOR)
-
-outbreakDB <- outbreakDat %>% 
-  bind_rows(outbreakDat %>% st_shift_longitude) %>%
-  st_as_sf(coords = c("Longitude", "Latitude"), crs = 4326) %>%
-  mutate(color = ifelse(is_wild, "slateblue", "chocolate"))
-
-
-grps      <- readxl::read_xlsx("data/SpGroups.xlsx") 
-spPalette <- tibble(group = grps$GroupNew %>% unique(),
-                    color = wes_palette("AsteroidCity1")[c(1,4,2,3,5)])
+  sf_tracks <- sf_tracks %>% 
+    mutate(Color = ifelse(Species%in%c("Short-tailed Shearwater", "Wedge-tailed Shearwater"),
+                   rainbow(365)[Date], Color))
+  
+  outbreakSM <- outbreakDat %>% st_drop_geometry() %>%
+    group_by(Year, is_wild) %>% summarise(sample = sum(sample))
+  
+  legendDistr <- dist %>% st_drop_geometry %>% filter(!duplicated(CODE)) %>%
+    dplyr::select(CODE, COLOR)
+  
+  outbreakDB <- outbreakDat %>% 
+    bind_rows(outbreakDat %>% st_shift_longitude) %>%
+    st_as_sf(coords = c("Longitude", "Latitude"), crs = 4326) %>%
+    mutate(color = ifelse(is_wild, "slateblue", "chocolate"))
+  
+  
+  grps      <- readxl::read_xlsx("data/SpGroups.xlsx") 
+  spPalette <- tibble(group = grps$GroupNew %>% unique(),
+                      color = wes_palette("AsteroidCity1")[c(1,4,2,3,5)])
 }
 
 #### UI ####
@@ -67,20 +67,20 @@ ui <- fluidPage(
                collapsible = TRUE, fluid = TRUE,
                id = "navbar",
                windowTitle = "HPAI Dashboard",
-               title = HTML('<a style="text-decoration:none;cursor:default;color:#FFFFFF;" class="active" href="#">High Pathogenicity Avian Influenza (HPAI) Risk for Australia</a>'), 
+               title = HTML("<a style='text-decoration:none;cursor:default;color:#FFFFFF;' class='active' href='#'>High AviFluMap: a H5 Bird Flu Model Tool for Australia's Wild birds</a>"), 
                 
-               #### Home #####
+               #### Further info #####
                {
-                 tabPanel("Home",
-                      fluidRow(
-                          column(12, align="center", htmlOutput("Home")),
-                      )
+                 tabPanel("Data Information",
+                          fluidRow(
+                            column(12, align="center", htmlOutput("Information")),
+                          )
                  )
                },
                
                #### HPAIV Outbreaks #####
                {
-                 tabPanel("HPAI Outbreaks",
+                 tabPanel("Global H5 HPAI Event Map",
                           div(class="outer",
                               tags$head(includeCSS("styles.css")),
                               
@@ -97,9 +97,9 @@ ui <- fluidPage(
                                                                          choices = as.character(seq(2005, 2024, by = 1)),
                                                                          selected = 2015, animate = T))
                                             ),
-                                              plotOutput("Outbreak_Legend", width = 160, height = 80),
-                                              br(),
-                                              plotOutput("outbreakGraph", width = 275, height = 220)
+                                            plotOutput("Outbreak_Legend", width = 160, height = 80),
+                                            br(),
+                                            plotOutput("outbreakGraph", width = 275, height = 220)
                               )
                           )
                           
@@ -196,10 +196,10 @@ ui <- fluidPage(
                                             fluidRow(
                                               column(8, materialSwitch("seabirdMigrations", "Migrations", status = "info", value = FALSE)),
                                               conditionalPanel("input.seabirdMigrations==true",
-                                              column(9, plotOutput("pieSeabird", width = 270, height = 270))
+                                                               column(9, plotOutput("pieSeabird", width = 270, height = 270))
                                               )
                                             )
-
+                                            
                                             
                               ),
                               
@@ -221,77 +221,77 @@ ui <- fluidPage(
                
                #### Species at Risk ####
                {
-               tabPanel("Species at Risk",
-                      fluidRow(
-                        column(12, align="center", htmlOutput("SpeciesRisk")),
-                      )
-               )
-               },
-               
-               #### Aggregations #####
-               {
-               tabPanel("Bird Aggregations",
-                        div(class="outer", tags$head(includeCSS("styles.css")),
-                            
-                         leafletOutput("AggrMap", width="100%", height="100%") ,
-                         
-                         absolutePanel(id = "controls", class = "panel panel-default",
-                                       top = 80, left = 30, width = 350, fixed = TRUE,
-                                       draggable = FALSE, height = "auto",
-                                       
-                                       br(),
-                                       h4('Bird Aggregation Hotspots:'),
-                                       h5("Migratory shorebird, waterbird and seabird sites with 5,000 birds or more, and where these birds are spending the majority of their time while in Australia"),
-                                       hr(style = "border-top: 1px solid #74b9e1;"),
-                                       
-                                       h4('Show Special Bird Areas:'),
-                                       fluidRow(column(6, materialSwitch("showBirdAreas", "", status = "info", value = FALSE))),
-                                       hr(style = "border-top: 1px solid #74b9e1;"),
-                                       
-                                       h4('Interactve details:'),
-                                       fluidRow(column(6, materialSwitch("interactiveDetails", "", status = "info", value = FALSE))),
-                                       
-                                       br(),
-                                       conditionalPanel(
-                                         condition = "input.AggrMap_shape_click != null & input.interactiveDetails",
-                                         h4("Maximum count:"),
-                                         verbatimTextOutput("MaxCount"),
-                                         conditionalPanel(
-                                           condition = "input.AggrMap_shape_click != null",
-                                           plotOutput("speciesPie", width = 330, height = 300),
-                                           br(),
-                                           fluidRow(
-                                             column(8, materialSwitch("speciesDetail", "Species summary", status = "info", value = FALSE))
-                                           ),
-                                           conditionalPanel(
-                                             condition = "input.speciesDetail",
-                                             plotOutput("speciesDetail", width = 330, height = 290)
-                                           )
-                                         )
-                                       ),
-                                       
-                                       hr(style = "border-top: 1px solid #74b9e1;"),
-                                       h5("Note: This is not a 'live' map. Whilst it is known that species distribution and density change over time (seasonally and between years) this map is static."),
-                                       
-                                       
-                         )
-                         
-                        )
-                    )
-               },
-               
-               #### Further info #####
-               {
-                 tabPanel("Data Information",
+                 tabPanel("Species at Risk",
                           fluidRow(
-                            column(12, align="center", htmlOutput("Information")),
+                            column(12, align="center", htmlOutput("SpeciesRisk")),
                           )
                  )
                },
                
+               #### Aggregations #####
+               {
+                 tabPanel("Bird Aggregations",
+                          div(class="outer", tags$head(includeCSS("styles.css")),
+                              
+                              leafletOutput("AggrMap", width="100%", height="100%") ,
+                              
+                              absolutePanel(id = "controls", class = "panel panel-default",
+                                            top = 80, left = 30, width = 350, fixed = TRUE,
+                                            draggable = FALSE, height = "auto",
+                                            
+                                            br(),
+                                            h4('Bird Aggregation Hotspots:'),
+                                            h5("Migratory shorebird, waterbird and seabird sites with 5,000 birds or more, and where these birds are spending the majority of their time while in Australia"),
+                                            hr(style = "border-top: 1px solid #74b9e1;"),
+                                            
+                                            h4('Show Special Bird Areas:'),
+                                            fluidRow(column(6, materialSwitch("showBirdAreas", "", status = "info", value = FALSE))),
+                                            hr(style = "border-top: 1px solid #74b9e1;"),
+                                            
+                                            h4('Interactve details:'),
+                                            fluidRow(column(6, materialSwitch("interactiveDetails", "", status = "info", value = FALSE))),
+                                            
+                                            br(),
+                                            conditionalPanel(
+                                              condition = "input.AggrMap_shape_click != null & input.interactiveDetails",
+                                              h4("Maximum count:"),
+                                              verbatimTextOutput("MaxCount"),
+                                              conditionalPanel(
+                                                condition = "input.AggrMap_shape_click != null",
+                                                plotOutput("speciesPie", width = 330, height = 300),
+                                                br(),
+                                                fluidRow(
+                                                  column(8, materialSwitch("speciesDetail", "Species summary", status = "info", value = FALSE))
+                                                ),
+                                                conditionalPanel(
+                                                  condition = "input.speciesDetail",
+                                                  plotOutput("speciesDetail", width = 330, height = 290)
+                                                )
+                                              )
+                                            ),
+                                            
+                                            hr(style = "border-top: 1px solid #74b9e1;"),
+                                            h5("Note: This is not a 'live' map. Whilst it is known that species distribution and density change over time (seasonally and between years) this map is static."),
+                                            
+                                            
+                              )
+                              
+                          )
+                 )
+               },
+               
+               # #### Home #####
+               # {
+               #   tabPanel("Home",
+               #        fluidRow(
+               #            column(12, align="center", htmlOutput("Home")),
+               #        )
+               #   )
+               # },
+               
                #### About #####
                {
-                 tabPanel("About",
+                 tabPanel("About AviFluMap",
                     fluidRow(
                       column(12, align="center", htmlOutput("About")),
                     )
@@ -310,11 +310,11 @@ server <- function(input, output) {
   #### Home ####
   ###############
   
-  {
-    output$Home <- renderUI({
-      tags$iframe(src="Home.html", style='width:80vw;height:80vh;', scrolling = 'yes', frameBorder = '1')
-    })
-  }
+  # {
+  #   output$Home <- renderUI({
+  #     tags$iframe(src="Home.html", style='width:80vw;height:80vh;', scrolling = 'yes', frameBorder = '1')
+  #   })
+  # }
   
   ###################
   #### Outbreaks ####
@@ -552,15 +552,14 @@ server <- function(input, output) {
   
   trackingData <- reactive({
     if(input$species!="All") {
-      sf_tracks %>%
+      sf_tracks %>% filter(!grepl("Shearwater", Species)) %>%
         mutate(Days = ifelse(Type==2, 1, Days)) %>%
         filter(Species == input$species) %>%
         rename(Weight = spWeight) %>%
         mutate(Weight = ifelse(Type%in%c(0,2), 1, Weight))
     } else {
-      sf_tracks %>%
+      sf_tracks %>% filter(!grepl("Shearwater", Species)) %>%
         mutate(Days = ifelse(Type==2, 1, Days)) %>%
-        filter(Species == meta$species[-14:15]) %>%
         rename(Weight = allWeight)  %>%
         mutate(Weight = ifelse(Type%in%c(0,2), 1, Weight))
     }
@@ -883,7 +882,7 @@ server <- function(input, output) {
   
   {
     output$Information <- renderUI({
-      tags$iframe(src="Information.html", style='width:80vw;height:80vh;', scrolling = 'yes', frameBorder = '1')
+      tags$iframe(src="Information.html", style='width:80vw;height:80vh;', scrolling = 'yes', frameBorder = '0')
     })
   }
   

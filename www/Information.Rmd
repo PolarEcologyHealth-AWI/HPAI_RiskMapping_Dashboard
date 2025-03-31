@@ -152,7 +152,7 @@ This page provides guidance on how to navigate and use each page of AviFluMap. I
 
 <br />
 
-### About the Global H5 HPAI Map data
+### About the Global H5 HPAI Event Map data
 
 <br />
 
