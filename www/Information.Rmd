@@ -168,7 +168,7 @@ render("WOAH MapOutbreaks.Rmd")
 
 * The interactive, zoomable map shows the locations of H5 HPAI events involving domestic (including poultry) and wild birds as reported to the World Animal Health Information System (WAHIS) provided by World Organisation for Animal Health (WOAH). The map allows the user to select H5 HPAI events within a calendar year period. 
 
-* The map uses all H5 HPAI event data compiled in WAHIS since 2005. Since October 2021, the majority of H5 HPAI events captured in WAHIS relate to HPAI H5N1 clade 2.3.4.4b (H5 bird flu). Since it has not ben detected in Australia, all H5 HPAI events are from outside of Australia. 
+* The map uses all H5 HPAI event data compiled in WAHIS since 2005. Since October 2021, the majority of H5 HPAI events captured in WAHIS relate to HPAI H5N1 clade 2.3.4.4b (H5 bird flu). Since it has not been detected in Australia, all H5 HPAI events are from outside of Australia. 
 
 * H5 HPAI events in WAHIS can be searched and viewed <a href="https://wahis.woah.org/#/event-management" target="_blank">here</a>. 
 
@@ -243,10 +243,10 @@ S$Dead.sum <- NULL
 * To a lesser extent, AviFluMap may also identify species that are less likely to experience sickness and death but could still play a role in maintaining or spreading the virus as reservoirs or carriers. Therefore, in any infection scenario, the reservoir species, species that disperse the virus and species that experience sickness or death (individually or at the population level) are not necessarily the same.
 
 
-* Based on the events in WAHIS, there have been
-`r sum(S$Outbreaks)` 
- events relating to H5 HPAI in wild birds, involving 
-`r sum(S$Casualties)` 
+* Based on the events in WAHIS, there have been over
+`r paste0(trunc(sum(S$Outbreaks)/1000),",000")` 
+ events relating to H5 HPAI in wild birds, involving approximately 
+`r paste0(round(sum(S$Casualties)/1000),",000")`  
 individuals, across 
 `r length(unique(I$Order[which(I$Date>="2021-10-01")]))-1` 
  orders and 
@@ -340,10 +340,10 @@ C$Casualties <- C$Dead.sum
 
 ```
 
-* Increasingly, wild mammals are also affected by H5 HPAI, specifically HPAI H5N1 clade 2.3.4.4b virus. According to WAHIS data there have been 
-`r sum(SM$Outbreaks)`
-events of H5 HPAI in wild mammals involving 
-`r sum(SM$Casualties)` 
+* Increasingly, wild mammals are also affected by H5 HPAI, specifically HPAI H5N1 clade 2.3.4.4b virus. According to WAHIS data there have been over 
+`r paste0(trunc(sum(SM$Outbreaks)/100),"00")`
+ events of H5 HPAI in wild mammals involving over 
+`r paste0(trunc(sum(SM$Casualties)/1000),",000")` 
  casualties, and 
 `r length(unique(M$Species[which(M$Date>="2021-10-01")]))-1` 
 species of mammals. The table and figure below provide an overview of these species and how these are distributed across the different orders and families of mammals. The vast majority of mammals are carnivorous, with the route of infection probably by eating sick or dead birds infected with H5 HPAI. While categorized as “wild” in the WAHIS database, some species (e.g. fox) may represent farmed animals.

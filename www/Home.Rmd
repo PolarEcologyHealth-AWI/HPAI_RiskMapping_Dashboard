@@ -13,13 +13,13 @@ output: html_document
 
 <br />
 
-### AviFluMap: a H5 Bird Flu Wild Bird Model Tool for Australia
+### AviFluMap: a H5 Bird Flu Model Tool for Australia's Wild Birds
 
 <br />
 
 The dominant virus strain in the current panzootic of high pathogenicity avian influenza (HPAI) is *H5N1 clade 2.3.4.4b*. This strain (hereafter referred to as “*H5 bird flu*”) is belonging to a broader group of H5 HPAI strains with a common HPAI H5 ancestor first detected in China in 1996. It has now spread worldwide with the exception of Australia and New Zealand, and has had unprecedented impacts on wild animal populations as well as devastating impacts on the poultry industry (e.g. <a href="https://www.nature.com/articles/s41559-023-02182-x" target="_blank">Klaassen & Wille 2023</a>). 
 
-*AviFluMap*, a *H5 Bird Flu Wild Bird Model Tool for Australia* allows users to better understand the potential role of wild birds to introduce and spread H5 bird flu in Australia.  The understanding is an important aspect of preparedness and response planning for wildlife managers, government agencies (biosecurity, environment and public health), industry and others, and helps guide monitoring efforts and actions to mitigate potential impacts.
+*AviFluMap, a H5 Bird Flu Wild Bird Model Tool for Australia's Wild Birds*  (hereafter “AviFluMap”) allows users to better understand the potential role of wild birds to introduce and spread H5 bird flu in Australia.  The understanding is an important aspect of preparedness and response planning for wildlife managers, government agencies (biosecurity, environment and public health), industry and others, and helps guide monitoring efforts and actions to mitigate potential impacts.
 
 Information about the global spread of HPAI virus via wild birds, and important considerations for risks to Australia, are presented in AviFluMap as follows: 
 

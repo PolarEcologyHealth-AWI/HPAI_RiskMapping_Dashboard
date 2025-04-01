@@ -199,7 +199,7 @@ ggtree(prunedtree4, layout = "circular", branch.length = "none") %<+% tip_result
 
 <br />
 
-Lastly, we present a full list of HPAI outbreak susceptibility for all Australian bird families. The list is currently ordered by families with the highest estimated outbreaks, but can be ordered based on other columns by interacting with the column headings. The table can also be downloaded using a range of formats.
+Lastly, the table below presents a full list of HPAI outbreak susceptibility for all Australian bird families. The list is currently ordered by families with the highest estimated outbreaks, but can be ordered based on other columns by interacting with the column headings. The table can also be downloaded using a range of formats.
 
 <br />
 
@@ -235,7 +235,7 @@ The heatmap below shows total number of HPAI events in birds with different diet
 
 The aim of this is to show that broad categorisations like “freshwater” or “predator” are not insightful by themselves - these interact with other categories. For example, it is only congregating freshwater birds with plant-based diets that have many HPAI notifications. By selecting different families, it should become clear how Family, as a taxonomic grouping, accounts for many such interactions - ducks disproportionately account for the freshwater birds with plant-based diets, for example. Hence, using family-level phylogeny takes into account a considerable amount of ecological information, and therefore provides a valid basis for predictions of which Australian birds may be susceptible to HPAI infection.
 
-Still, while using family-level phylogeny thus makes much sense for predicting HPAI susceptibility for individual species, exceptions might apply, and predictions should be considered carefully. For example, it might be expected that an Australian wood duck would be less susceptible to HPAI infection than other ducks, because it has a different ecology to other members of its taxonomic family. For this reason, decisions on wildlife risk mitigation strategies should be cautiously based the susceptibility predictions herein, and with an understanding of uncertainty. Especially when considering species that have thus far not experienced exposure to H5 bird flu, which includes many species native to Australia. 
+While using family-level phylogeny thus makes much sense for predicting HPAI susceptibility for individual species, exceptions might apply, and predictions should be considered carefully. For example, it might be expected that an Australian wood duck would be less susceptible to HPAI infection than other ducks, because it has a different ecology to other members of its taxonomic family. For this reason, decisions on wildlife risk mitigation strategies should be cautiously based on the susceptibility predictions herein, and with an understanding of uncertainty. Especially when considering species that have thus far not experienced exposure to H5 bird flu, which includes many species native to Australia. 
  
 
 <br />
