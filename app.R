@@ -80,7 +80,7 @@ ui <- fluidPage(
                
                #### Further info #####
                {
-                 tabPanel("Data Information",
+                 tabPanel("About the Data",
                           fluidRow(
                             column(12, align="center", htmlOutput("Information")),
                           )
