@@ -5,7 +5,7 @@ account: slisovski
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 12858868
-bundleId:
+bundleId: 10043581
 url: https://slisovski.shinyapps.io/AvianMigrationFlu-Mapping/
 version: 1
 asMultiple: FALSE

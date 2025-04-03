@@ -892,7 +892,7 @@ server <- function(input, output) {
   
   {
     output$About <- renderUI({
-      tags$iframe(src="about.html", style='width:80vw;height:80vh;', scrolling = 'yes', frameBorder = '0')
+      tags$iframe(src="About.html", style='width:80vw;height:80vh;', scrolling = 'yes', frameBorder = '0')
     })
   }
 
