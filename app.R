@@ -253,7 +253,7 @@ ui <- fluidPage(
                                             h5("Migratory shorebird, waterbird and seabird sites with 5,000 birds or more, and where these birds are spending the majority of their time while in Australia"),
                                             hr(style = "border-top: 1px solid #74b9e1;"),
                                             
-                                            h4('Show Special Bird Areas:'),
+                                            h4('Show Shorebird Areas:'),
                                             fluidRow(column(6, materialSwitch("showBirdAreas", "", status = "info", value = FALSE))),
                                             hr(style = "border-top: 1px solid #74b9e1;"),
                                             
@@ -756,7 +756,7 @@ server <- function(input, output) {
   {
   cls  <- rev(paletteer_c("ggthemes::Red-Green Diverging", 6))
   brks <- c(0, 100, 1000, 5000, 10000, 50000, 2000000) 
-  labelText <- glue::glue("<b>Special Bird Area: </b> {sba$SBIRD_AREA}")
+  labelText <- glue::glue("<b>Shorebird Area: </b> {sba$SBIRD_AREA}")
   
   output$AggrMap <- renderLeaflet({
     
