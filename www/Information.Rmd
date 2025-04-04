@@ -172,7 +172,7 @@ render("WOAH MapOutbreaks.Rmd")
 
 * H5 HPAI events in WAHIS can be searched and viewed <a href="https://wahis.woah.org/#/event-management" target="_blank">here</a>. 
 
-* An alternative map provided <a href="https://vhost2009.hosted-sites.deakin.edu.au/HPAI/WOAH-MapOutbreaks.html" target="_blank">here</a>, presents WAHIS H5 and H7 HPAI event data in both domestic and wild birds since 2005, and allows the user to select a date range, identify confirmed cases, and obtain more detailed information on individual outbreaks.
+* An alternative map provided <a href="WOAH-MapOutbreaks.html" target="_blank">here</a>, presents WAHIS H5 and H7 HPAI event data in both domestic and wild birds since 2005, and allows the user to select a date range, identify confirmed cases, and obtain more detailed information on individual outbreaks.
 
 * Each event recorded in WAHIS provides the number of cases and deaths for each species; and may represent a single bird or multiple birds from a single or multiple species. 
 
@@ -395,9 +395,9 @@ treemap(C,
 
 * Note – this is not a “live” map. Whilst it is known that species distribution and density change over time (seasonally and between years) this map is static.
 
-* Acknowledging the ecological traits, behaviours and associated habitat choice that are most likely to influence the maintenance and spread H5 bird flu, the map focuses on sites of significance for selected waterbirds, shorebirds and seabirds (full list of families included). Note that the families included in this list have been conservatively chosen, including some families that have relatively low HPAI susceptibility scores.
+* Acknowledging the ecological traits, behaviours and associated habitat choice that are most likely to influence the maintenance and spread of H5 bird flu, the map focuses on sites of significance for selected waterbirds, shorebirds and seabirds (full list of families included). Note that the families included in this list have been conservatively chosen, including some families that have relatively low HPAI susceptibility scores.
 
-* Five national databases were interrogated to identify sites of interest. The databases represent the best available information on habitat supporting migratory and resident shorebird, seabird and waterbird populations for the Australian mainland and offshore islands. Importantly they also include information on known breeding colonies of resident shorebird, seabird and waterbirds.
+* Five national databases were interrogated to identify sites of interest. The databases represent the best available information on habitat supporting migratory and resident shorebird, seabird and waterbird populations for the Australian mainland and offshore islands. Importantly they also include information on known breeding colonies of resident shorebird, seabird and waterbirds. These databases include the <a href="https://www.unsw.edu.au/research/ecosystem/our-research/rivers-and-wetlands/eastern-australian-waterbird-survey" target="_blank">**Eastern Australian Waterbird Survey**</a>) 
 
 * Given the methods for data collection and spatial referencing vary between these databases it is difficult to reliably ascertain the true footprint of a particular population or habitat utilised. For example, a datapoint may represent a survey of birds in a 20,000ha wetland complex or a 20ha component of that complex. For this reason, a grid style data representation was employed. Each square in the map symbolises the maximum recorded bird abundance in a given 5km area in the last 25 years. This approach also allows representation of habitat at a scale relevant to management.
 
@@ -407,7 +407,7 @@ treemap(C,
 
 * Survey information associated with the maximum count for each grid cell can be viewed by clicking the cell. This includes information on species diversity, whether a breeding colony has been identified and proportional composition of the overall bird abundance by family. It is important to note that this information doesn’t provide a complete list of species of interest recorded at the site but is a useful tool to identify the major groups present and thus threat mitigation and/or response measures to be considered.
 
-* For non-coastal wetlands, habitat utilisation/availability can be further scrutinised by utilising the abundance map in conjunction with dynamic wetland inundation mapping (for an overview of how dynamic water availability in the landscape is across Australia, please see <a href="https://vhost2009.hosted-sites.deakin.edu.au/HPAI/Waterbody.html" target="_blank">**here**</a>).
+* For non-coastal wetlands, habitat utilisation/availability can be further scrutinised by utilising the abundance map in conjunction with dynamic wetland inundation mapping (for an overview of how dynamic water availability in the landscape is across Australia, please see <a href="Waterbody.html" target="_blank">**here**</a>).
 
 <br />
 

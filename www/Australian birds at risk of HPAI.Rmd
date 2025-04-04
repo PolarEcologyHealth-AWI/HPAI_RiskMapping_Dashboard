@@ -219,7 +219,7 @@ datatable(treedat, options = list(iDisplayLength = 25, dom = 'Blfrtip', buttons 
 
 <br />
 
-<a href="https://vhost2009.hosted-sites.deakin.edu.au/HPAI/Species-predictions-list.html" target="_blank"> Click here</a> for a full list of Australian species belonging to these families, their key ecological traits, and their conservation status.
+<a href="Species-predictions-list.html" target="_blank"> Click here</a> for a full list of Australian species belonging to these families, their key ecological traits, and their conservation status.
 
 <br />
 
