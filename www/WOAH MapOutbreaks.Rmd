@@ -1,7 +1,7 @@
 ---
 title: "Map Outbreaks in Poultry and Wild Birds since early 2005"
-author: "Marcel Klaassen"
-date: "`r Sys.Date()`"
+author: ""
+date: ""
 output:
   html_document:
     number_sections: false
@@ -17,22 +17,26 @@ editor_options:
 ```{r initializing, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
 load(file="data/WOAH_PI_Rdata")
+LastDay <- max(c(PI$`event_start date`,PI$event_confirmation_date,PI$event_closing_date),na.rm=TRUE)
 library(leaflet)
 library(htmltools)
 ```
 
 # Map the HPAI incidences over time
 
-The sliders allow you to select a date ranges. You can also select a narrow range and move that range as a whole up and down the slider (e.g. using the date slider you can slide a time window so, you can look at how the HPAI epidemiology evolves across the landscape over time [i.e. a manual animation if you like]).
+The slider allows you to select a date range. You can also select a narrow range and move that range as a whole up and down the slider (e.g. using the date slider you can slide a time window. Using that facility, you can thus investigate how the HPAI epidemiology evolves across the landscape over time [i.e. a manual animation if you like]).
 
-In the map chocolate markers are for wild birds and blue for poultry.
+In the map chocolate markers are for poultry and blue for wild birds.
+
+The last entry in the database (i.e. not neccessarily the start of the latest outbreak) is from `r LastDay`.
+
 
 ```{r map the outbreaks by is_wild, warning=FALSE, message=FALSE, error=FALSE, eval=TRUE}
 
 Is <- subset(PI, select=c("Dead","Species" ,"is_wild","Date","Longitude","Latitude","sero_sub_genotype_eng"))
 Is$H5 <- grepl("H5",Is$sero_sub_genotype_eng)
 Is <- Is[complete.cases(Is),]
-Is$markerCol <- ifelse(Is$is_wild,"chocolate","blue")
+Is$markerCol <- ifelse(Is$is_wild,"blue","chocolate")
 xy <- crosstalk::SharedData$new(Is)
 pal <- colorFactor(
   palette = 'Paired',

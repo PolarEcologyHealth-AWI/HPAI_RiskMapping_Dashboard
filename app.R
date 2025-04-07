@@ -103,7 +103,7 @@ ui <- fluidPage(
                                             fluidRow(
                                               column(12, sliderTextInput("hpai_month", label = "", 
                                                                          grid = TRUE, force_edges = FALSE, hide_min_max = TRUE,
-                                                                         choices = as.character(seq(2005, 2024, by = 1)),
+                                                                         choices = as.character(seq(2005, 2025, by = 1)),
                                                                          selected = 2015, animate = T))
                                             ),
                                             plotOutput("Outbreak_Legend", width = 160, height = 80),

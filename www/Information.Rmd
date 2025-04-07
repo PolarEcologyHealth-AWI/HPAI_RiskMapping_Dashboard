@@ -32,7 +32,7 @@ options(scipen=999)
 ```{r get Empres data, warning=FALSE, message=FALSE}
 #get OIE data
 # from https://oieoffice365.sharepoint.com/sites/PeriodicaldataextractionsOIE-WAHIS. 
-I <- read_excel("data/infur_20250113.xlsx", sheet="infur_20250113")
+I <- read_excel("data/infur_20250331.xlsx", sheet="infur_20250331")
 B <- read_excel("data/BirdListI.xlsx")
 
 #correct a weird species

@@ -1,6 +1,7 @@
 library(tidyverse)
 
 load("~/Downloads/WOAH_PI_Rdata")
+#load("C:/Users/marcelk/OneDrive - Deakin University/Active projects/Github/HPAI_RiskMapping_Dashboard/www/data/WOAH_PI_Rdata")
 
 Is <- PI %>% dplyr::select(c("Dead","Species" ,"is_wild","Date","Longitude","Latitude","sero_sub_genotype_eng")) %>%
   filter(complete.cases(.)) %>%

@@ -26,7 +26,7 @@ Information about the global spread of HPAI virus via wild birds, and important 
 
 * **About the Data**: instructions for tool navigation and important information about the data sets used in this tool, assumptions, limitations and data interrogation methodology. **IMPORTANT: To guide appropriate and effective use of** AviFluMap**, please visit this page first to read about the limitations and potential biases**.
 
-* **Global H5 HPAI Map**: map based on data from the World Organisation of Animal Health’s World Animal Health Information System (WAHIS). It shows H5 HPAI events notified to WOAH in domestic and wild birds for all strains of H5 HPAI including the current H5 bird flu strain across the globe since 2021. Data was last retrieved from WAHIS on 06/01/2025.
+* **Global H5 HPAI Map**: map based on data from the World Organisation of Animal Health’s World Animal Health Information System (WAHIS). It shows H5 HPAI events notified to WOAH in domestic and wild birds for all strains of H5 HPAI including the current H5 bird flu strain across the globe since 2021. Data was last retrieved from WAHIS on 07/04/2025.
 
 * **Bird Migrations**: displays the routes taken by migratory birds that could bring HPAI, including H5 bird flu, to Australia.
 
@@ -40,7 +40,7 @@ Information about the global spread of HPAI virus via wild birds, and important 
 <br />
 
 
-*NOTE: When the data used for AviFluMap is updated, the analysis may show revised results (such as new species at risk). Users should revisit the site regularly to access the latest information. Data will continue to be updated to AviFluMap, however at present the schedule for future updates has not yet been determined. WAHIS data was last updated on 06/01/2025 and bird aggregation data was last updated on 01/11/2024.*
+*NOTE: When the data used for AviFluMap is updated, the analysis may show revised results (such as new species at risk). Users should revisit the site regularly to access the latest information. Data will continue to be updated to AviFluMap, however at present the schedule for future updates has not yet been determined. WAHIS data was last updated on 07/04/2025 and bird aggregation data was last updated on 01/11/2024.*
 
 ---
 
