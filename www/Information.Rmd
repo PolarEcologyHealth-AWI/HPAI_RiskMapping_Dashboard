@@ -32,7 +32,7 @@ options(scipen=999)
 ```{r get Empres data, warning=FALSE, message=FALSE}
 #get OIE data
 # from https://oieoffice365.sharepoint.com/sites/PeriodicaldataextractionsOIE-WAHIS. 
-I <- read_excel("data/infur_20250331.xlsx", sheet="infur_20250331")
+I <- read_excel("data/infur_20250428.xlsx", sheet="infur_20250428")
 B <- read_excel("data/BirdListI.xlsx")
 
 #correct a weird species
@@ -405,7 +405,7 @@ treemap(C,
 
 * Each grid cell in Australia was attributed the maximum abundance recorded from each of the five databases. The maximum of these numbers (100 - >50,000 individuals) was then represented on the map as one of six categories along a colour gradient. Where breeding colonies were identified, each neighbouring grid cell was ascribed the next lowest category to accommodate the colonies likely minimum foraging footprint beyond the 5km grid.
 
-* Survey information associated with the maximum count for each grid cell can be viewed by clicking the cell. This includes information on species diversity, whether a breeding colony has been identified and proportional composition of the overall bird abundance by family. It is important to note that this information doesn’t provide a complete list of species of interest recorded at the site but is a useful tool to identify the major groups present and thus threat mitigation and/or response measures to be considered.
+*	Where available, information associated with the maximum count for each grid cell can be viewed by toggling the "Interactive details" button on. This will highlight cells with available information and provide summaries of species diversity, whether a breeding colony has been identified and proportional composition of the overall bird abundance by family. It is important to note that this information doesn’t provide a complete list of species of interest recorded at the site but is a useful tool to identify the major groups present and thus threat mitigation and/or response measures to be considered.
 
 * For non-coastal wetlands, habitat utilisation/availability can be further scrutinised by utilising the abundance map in conjunction with dynamic wetland inundation mapping (for an overview of how dynamic water availability in the landscape is across Australia, please see <a href="Waterbody.html" target="_blank">**here**</a>).
 

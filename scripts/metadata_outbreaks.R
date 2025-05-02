@@ -1,4 +1,6 @@
 library(tidyverse)
+library(sf)
+library(stars)
 
 load("~/Downloads/WOAH_PI_Rdata")
 #load("C:/Users/marcelk/OneDrive - Deakin University/Active projects/Github/HPAI_RiskMapping_Dashboard/www/data/WOAH_PI_Rdata")
