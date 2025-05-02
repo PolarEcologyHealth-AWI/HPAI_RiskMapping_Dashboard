@@ -5,27 +5,53 @@
 # library(leaflet)
 # library(leafem)
 # library(paletteer)
-# #
-# # # load("data/sba.rda")
-# # # sba <- sba %>% st_transform(4326)
+# 
+# # load("data/sba.rda")
+# # sba <- sba %>% st_transform(4326)
 # # save(sba, file = "data/sba_trans.rda")
 # load("data/sba_trans.rda")
 # 
-# grid <- read_sf("~/Downloads/ChrisPurnell_Latest/grid/5km_grid_v9.shp") %>% dplyr::select(TARGET_FID)
-# data <- readxl::read_xlsx("~/Downloads/ChrisPurnell_Latest/MASTER_HPAI_GRID2.xlsx")
+# grid <- read_sf("/Volumes/SLis_SSD/Backup_022025/Downloads/ChrisPurnell_Latest/grid/5km_grid_v9.shp") %>% dplyr::select(TARGET_FID)
+# data <- readxl::read_xlsx("/Volumes/SLis_SSD/Backup_022025/Downloads/ChrisPurnell_Latest/MASTER_HPAI_GRID2.xlsx")
 # 
 # cls  <- rev(paletteer::paletteer_d("RColorBrewer::RdYlGn")[c(TRUE, FALSE)])
 # brks <- c(0, 100, 1000, 5000, 10000, 50000, 2000000)
 # 
 # densTab <- grid %>% left_join(data %>% dplyr::select(TARGET_FID, Max_of_Max), by = "TARGET_FID") %>%
-#   dplyr::select(TARGET_FID, Max_of_Max) %>% st_centroid()
+#   dplyr::select(TARGET_FID, Max_of_Max) %>% st_centroid() %>%
+#   st_transform(4326) %>%
+#   mutate(lon = st_coordinates(.)[,1], lat = st_coordinates(.)[,2],
+#          color = cls[cut(Max_of_Max, brks, labels = FALSE)]) %>% st_drop_geometry()
 # 
+# 
+# leaflet(options = leafletOptions(zoomControl = FALSE)) %>%
+#   addProviderTiles(providers$Esri.WorldShadedRelief, group = "map") %>%
+#   addProviderTiles(providers$CartoDB.VoyagerOnlyLabels, group = "label") %>%
+#   addCircles(data = densTab,
+#              lng = ~lon,
+#              lat = ~lat,
+#              stroke = FALSE,
+#              fillColor = ~color, fillOpacity = 0.8, radius = 2000)
+# 
+# save(densTab, file = "data/densTab.rda")
+# 
+# ### Cell info
+# smAggrData <- data %>% dplyr::select('TARGET_FID', 'Max_of_Max', 'SPECIES COUNT', names(data)[-c(1:15)]) %>%
+#   setNames(c('TARGET_FID', 'Max_of_Max', 'SPECIES_COUNT', names(data)[-c(1:15)])) %>%
+#   filter(!is.na(SPECIES_COUNT)) %>%
+#   left_join(densTab %>% st_drop_geometry() %>% dplyr::select(TARGET_FID, lon, lat, color), by = "TARGET_FID") %>%
+#   rename(RID = TARGET_FID)
+#   
+# save(smAggrData, file = "data/smAggrData.rda")
+
+
 # grid_detail <- densTab %>% st_transform(4326) %>%
 #   mutate(lon   = st_coordinates(.)[,1],
 #          lat   = st_coordinates(.)[,2],
 #          color = cls[cut(Max_of_Max, brks, labels = FALSE)]) %>%
 #   st_drop_geometry()
-# 
+ 
+
 # grid_minimal  <- st_rasterize(densTab %>% dplyr::select(Max_of_Max) %>% st_transform(4326),
 #                             st_as_stars(st_bbox(grid %>% st_transform(4326)), nx = 1662, ny = 939, values = NA, crs = 4326))
 # 

@@ -28,7 +28,8 @@ load("data/flagDens.rda")
 load("data/sf_tracks.rda")
 load("data/HPAIoutbreak.rda")
 load("data/sba_trans.rda")
-load("data/birdAggr.rda")
+load("data/densTab.rda")
+load("data/smAggrData.rda")
 
 ### Pre-calculations
 {
@@ -253,7 +254,7 @@ ui <- fluidPage(
                                             h5("Migratory shorebird, waterbird and seabird sites with 5,000 birds or more, and where these birds are spending the majority of their time while in Australia"),
                                             hr(style = "border-top: 1px solid #74b9e1;"),
                                             
-                                            h4('Show Shorebird Areas:'),
+                                            h4('Shorebird Areas:'),
                                             fluidRow(column(6, materialSwitch("showBirdAreas", "", status = "info", value = FALSE))),
                                             hr(style = "border-top: 1px solid #74b9e1;"),
                                             
@@ -271,11 +272,11 @@ ui <- fluidPage(
                                                 br(),
                                                 fluidRow(
                                                   column(8, materialSwitch("speciesDetail", "Species summary", status = "info", value = FALSE))
-                                                ),
-                                                conditionalPanel(
-                                                  condition = "input.speciesDetail",
-                                                  plotOutput("speciesDetail", width = 330, height = 290)
-                                                )
+                                                ) #,
+                                                # conditionalPanel(
+                                                #   condition = "input.speciesDetail",
+                                                #   plotOutput("speciesDetail", width = 330, height = 290)
+                                                # )
                                               )
                                             ),
                                             
@@ -283,6 +284,15 @@ ui <- fluidPage(
                                             h5("Note: This is not a 'live' map. Whilst it is known that species distribution and density change over time (seasonally and between years) this map is static."),
                                             
                                             
+                              ),
+                              
+                              conditionalPanel(condition = "input.speciesDetail",
+                                               absolutePanel(id = "controls", class = "panel panel-default", 
+                                                             top = 80, left = 390, fixed=TRUE, 
+                                                             draggable = TRUE,
+                                                             height = 450, width = 360,
+                                                             plotOutput("speciesDetail", width = 330, height = 450)
+                                               )
                               )
                               
                           )
@@ -701,23 +711,26 @@ server <- function(input, output) {
   ##########################
   
   cellSelect <- reactive({
-    if(!is.null(input$AggrMap_shape_click$lat)) {
-      RID <- st_point(c(input$AggrMap_shape_click$lng, input$AggrMap_shape_click$lat)) %>%
-        st_sfc(crs = 4326) %>% st_intersection(birdAggr[[2]],.) %>% pull(RID) %>% suppressMessages() %>% suppressWarnings()
-      ifelse(length(RID)>0, RID, -100)
+    if(!is.null(input$AggrMap_shape_click)) {
+      input$AggrMap_shape_click[1]
     } else NULL
   })
   
   output$speciesPie <- renderPlot({
     if(cellSelect()>0) {
-      tmp <- birdAggr[[1]] %>% filter(RID==cellSelect())
-    
-      tmp %>% dplyr::select(spPalette$group) %>% pivot_longer(cols = everything()) %>%
-        ggplot(., mapping = aes(x = "", y = value, fill = name)) +
+      tmp <- smAggrData %>% filter(RID==cellSelect()) %>% dplyr::select(-Max_of_Max, -SPECIES_COUNT, -color) %>%
+        pivot_longer(cols = -RID) %>% left_join(grps, join_by(name == Group)) %>% 
+        group_by(GroupNew) %>% summarise(value = sum(value, na.rm = T)) %>% filter(!is.na(GroupNew), GroupNew>0) %>%
+        left_join(spPalette, join_by(GroupNew==group)) %>%
+        mutate(perc = (value/sum(value))*100)
+        
+
+      tmp %>% 
+        ggplot(., mapping = aes(x = "", y = perc, fill = GroupNew)) +
         geom_bar(stat="identity", width = 1, show.legend = T) +
         scale_fill_manual(values = spPalette$color, breaks = spPalette$group) +
         coord_polar("y", start=0) +
-        geom_text(aes(label = ifelse(value*100<5, '', paste0(round(value*100,0), "%"))),
+        geom_text(aes(label = ifelse(perc<5, '', paste0(round(perc,0), "%"))),
                   position = position_stack(vjust=0.5),
                   size = 7, color = "grey20") +
         labs(x = NULL, y = NULL, fill = NULL) +
@@ -730,13 +743,13 @@ server <- function(input, output) {
   
   output$speciesDetail <- renderPlot({
     if(cellSelect()>0) {
-      tmp <- birdAggr[[1]] %>% filter(RID==cellSelect()) %>% 
-        dplyr::select(-spPalette$group, -RID, -Max_of_Max, -SPECIES_COUNT) %>% 
+      tmp <- smAggrData %>% filter(RID==cellSelect()) %>%
+        dplyr::select(-RID, -Max_of_Max, -SPECIES_COUNT, -lon, -lat, -color) %>%
         pivot_longer(cols = everything()) %>%
         filter(!is.na(value), value >0) %>%
         left_join(grps[,1:2], by = join_by("name"=="Group"))
-      
-      ggplot(tmp, mapping = aes(x = reorder(name, value), y = value*100)) +
+
+      ggplot(tmp, mapping = aes(x = name, y = value*100)) +
           geom_bar(stat="identity", width = 0.7, fill = "grey40", show.legend = F) +
           coord_flip() +
           labs(x = NULL, y = "Percentage") +
@@ -748,7 +761,7 @@ server <- function(input, output) {
   
   output$MaxCount <- renderText({
     if(cellSelect()>0) {
-      birdAggr[[1]] %>% filter(RID==cellSelect()) %>% pull(Max_of_Max)
+      smAggrData %>% filter(RID==cellSelect()) %>% pull(Max_of_Max)
     } else "no selection"
     })
   
@@ -764,29 +777,11 @@ server <- function(input, output) {
       addProviderTiles(providers$Esri.WorldShadedRelief, group = "Basemap") %>%
       addProviderTiles(providers$CartoDB.VoyagerOnlyLabels, group = "Basemap") %>%
       setView(lng = 131, lat = -28, zoom = 5) %>%
-      # addGeoRaster(
-      #           birdAggr[[4]],
-      #           opacity = 0.6,
-      #           colorOptions = colorOptions(
-      #             breaks = brks,
-      #             palette = cls),
-      #           group = 'MidZoom') %>%
-      addGeoRaster(
-                birdAggr[[3]],
-                opacity = 0.6,
-                colorOptions = colorOptions(
-                  breaks = brks,
-                  palette = cls),
-                group = 'raster') %>%
-      # addPolygons(data = birdAggr[[2]],
-      #             weight = 1,
-      #             color = "grey40",
-      #             fillColor = ~ Color,
-      #             fillOpacity = 0.8,
-      #             layerId = ~ RID,
-      #             group = "MaxZoom") %>%
-      # groupOptions("MaxZoom", zoomLevels = 7:20) %>%
-      # groupOptions("MidZoom", zoomLevels = 1:6) %>%
+      addCircles(data = densTab,
+                 lng = ~lon,
+                 lat = ~lat,
+                 stroke = FALSE,
+                 fillColor = ~color, fillOpacity = 0.8, radius = 2000) %>%
       addLegend("bottomright", 
                 colors = cls,
                 labels = c("1-100", "100-1,000", "1,000-5,000", "5,000-10,000", 
@@ -815,34 +810,46 @@ server <- function(input, output) {
                     fillColor = "grey50", fillOpacity = 0.2,
                     label = lapply(labelText, htmltools::HTML),
                     labelOptions = labelOptions(noHide = F, direction = "top")) %>%
-        addPolygons(data = birdAggr[[2]],
-                    weight = 1,
-                    color = "grey40",
-                    fillColor = ~ Color,
-                    fillOpacity = 0.8,
-                    layerId = ~ RID)
+        addCircles(data = smAggrData,
+                   lng = ~lon,
+                   lat = ~lat,
+                   stroke = TRUE,
+                   color = "black",
+                   weight = 0.5,
+                   fillColor = ~color, 
+                   fillOpacity = 0.8, 
+                   radius = 2000,
+                   layerId = ~ RID)
     }
     
     if(!input$showBirdAreas & input$interactiveDetails) {
       proxy <- proxy %>%
         clearGroup('raster') %>%
-        addPolygons(data = birdAggr[[2]],
-                    weight = 1,
-                    color = "grey40",
-                    fillColor = ~ Color,
-                    fillOpacity = 0.8,
-                    layerId = ~ RID)
+        addCircles(data = densTab,
+                   lng = ~lon,
+                   lat = ~lat,
+                   stroke = FALSE,
+                   fillColor = ~color, fillOpacity = 0.2, 
+                   radius = 2000) %>%
+        addCircles(data = smAggrData,
+                 lng = ~lon,
+                 lat = ~lat,
+                 stroke = TRUE,
+                 color = "black",
+                 weight = 0.5,
+                 fillColor = ~color, 
+                 fillOpacity = 0.8, 
+                 radius = 2000,
+                 layerId = ~ RID)
     }
     
     if(input$showBirdAreas & !input$interactiveDetails) {
       proxy <- proxy %>% 
-        addGeoRaster(
-          birdAggr[[3]],
-          opacity = 0.6,
-          colorOptions = colorOptions(
-            breaks = brks,
-            palette = cls),
-          group = 'raster') %>%
+        addCircles(data = densTab,
+                   lng = ~lon,
+                   lat = ~lat,
+                   stroke = FALSE,
+                   fillColor = ~color, fillOpacity = 0.8, radius = 2000, group = 'raster') %>%
         addPolygons(data = sba,
                     color = "black", weight = 1,
                     fillColor = "grey50", fillOpacity = 0.2,
@@ -852,18 +859,13 @@ server <- function(input, output) {
     
     if(!input$showBirdAreas & !input$interactiveDetails) {
     proxy <- proxy %>%
-      addGeoRaster(
-        birdAggr[[3]],
-        opacity = 0.6,
-        colorOptions = colorOptions(
-          breaks = brks,
-          palette = cls),
-        group = 'raster')
+      addCircles(data = densTab,
+                 lng = ~lon,
+                 lat = ~lat,
+                 stroke = FALSE,
+                 fillColor = ~color, fillOpacity = 0.8, radius = 2000, group = "raster")
     }
   })
-  
-  
-  
   }
   
   ##########################
